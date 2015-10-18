@@ -56,17 +56,20 @@ static char * test_At_mul_B() {
   return 0;
 }
 
-static char * test_bar2() {
-    srand48(12345L);
-    long x = lrand48();
-    mu_assert("error, x < 0", x >= 0);
-    return 0;
+static char * test_randsubseq() {
+  srand48(1234567890);
+  long* x = malloc(1000 * sizeof(long));
+  long nsamples = randsubseq(10000, 1000, 0.05, x);
+  mu_assert("error, nsamples < 0", nsamples >= 0);
+  mu_assert("error, x[0] outside",   x[0] >= 0 && x[0] < 10000);
+  mu_assert("error, x[end] outside", x[nsamples-1] >= 0 && x[nsamples-1] < 10000);
+  return 0;
 }
 
 static char * all_tests() {
     mu_run_test(test_A_mul_B);
     mu_run_test(test_At_mul_B);
-    mu_run_test(test_bar2);
+    mu_run_test(test_randsubseq);
     return 0;
 }
 

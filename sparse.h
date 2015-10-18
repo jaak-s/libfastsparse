@@ -43,4 +43,33 @@ double exprand() {
   
 }
 
+double randexp() {
+  return -log(1 - drand48());
+}
+
+/** computes random set of samples:
+ *  @input N          range from 0 to N-1
+ *  @output samples   array for storing sampled values
+ *  @returns          number of sampled values
+ **/
+long randsubseq(long N, long max_samples, double p, long* samples) {
+  double L = -1.0 / log1p(-p);
+  long i = -1;
+  long j = 0;
+
+  while (1) {
+    double s = randexp() * L;
+    if (s + i >= N - 1) {
+      return j;
+    }
+    i += (long)ceil(s);
+    // adding j-th sample:
+    samples[j] = i;
+    j++;
+    if (j >= max_samples) {
+      return j;
+    }
+  }
+}
+
 #endif /* SPARSE_H */
