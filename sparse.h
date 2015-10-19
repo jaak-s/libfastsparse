@@ -13,6 +13,21 @@ struct SparseBinaryMatrix
   int* cols;
 };
 
+/** constructor, computes nrow and ncol from data */
+struct SparseBinaryMatrix* new_sbm(long nnz, int* rows, int* cols) {
+  struct SparseBinaryMatrix *A = malloc(sizeof(struct SparseBinaryMatrix));
+  A->nnz  = nnz;
+  A->rows = rows;
+  A->cols = cols;
+  A->nrow = 0;
+  A->ncol = 0;
+  for (int i = 0; i < nnz; i++) {
+    if (rows[i] >= A->nrow) A->nrow = rows[i] + 1;
+    if (cols[i] >= A->ncol) A->ncol = cols[i] + 1;
+  }
+  return A;
+}
+
 /** y = A * x */
 void A_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
   int* rows = A->rows;
@@ -71,5 +86,38 @@ long randsubseq(long N, long max_samples, double p, long* samples) {
     }
   }
 }
+
+struct SparseBinaryMatrix* read_sbm(const char *filename) {
+  FILE* fh = fopen( filename, "r" );
+  size_t result1, result2;
+  if (fh == NULL) {
+    fprintf( stderr, "File error: %s\n", filename );
+    exit(1);
+  }
+  long nnz = 0;
+  result1 = fread(&nnz, sizeof(long), 1, fh);
+  if (result1 != 1) {
+    fprintf( stderr, "File reading error for nnz: %s\n", filename );
+    exit(1);
+  }
+  // reading data
+  int* rows = malloc(nnz * sizeof(int));
+  int* cols = malloc(nnz * sizeof(int));
+  result1 = fread(rows, sizeof(int), nnz, fh);
+  result2 = fread(cols, sizeof(int), nnz, fh);
+  if (result1 != nnz || result2 != nnz) {
+    fprintf( stderr, "File read error: %s\n", filename );
+    exit(1);
+  }
+  fclose(fh);
+  // convert data from 1 based to 0 based
+  for (long i = 0; i < nnz; i++) {
+    rows[i]--;
+    cols[i]--;
+  }
+
+  return new_sbm(nnz, rows, cols);
+} 
+
 
 #endif /* SPARSE_H */

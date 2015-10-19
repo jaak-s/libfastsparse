@@ -66,10 +66,21 @@ static char * test_randsubseq() {
   return 0;
 }
 
+static char * test_read_sbm() {
+  struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
+  mu_assert("error, nrow != 100", A->nrow == 100);
+  mu_assert("error, ncol != 50",  A->ncol == 50);
+  mu_assert("error, nnz != 504",  A->nnz  == 504);
+  mu_assert("error, rows[0] != 8", A->rows[0] == 8);
+  mu_assert("error, cols[0] != 0", A->cols[0] == 0);
+  return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_A_mul_B);
     mu_run_test(test_At_mul_B);
     mu_run_test(test_randsubseq);
+    mu_run_test(test_read_sbm);
     return 0;
 }
 
