@@ -7,9 +7,6 @@
 
 int tests_run = 0;
 
-int foo = 7;
-int bar = 4;
-
 struct SparseBinaryMatrix* make_sbm() {
   struct SparseBinaryMatrix *A = malloc(sizeof(struct SparseBinaryMatrix));
   A->nrow = 4;
