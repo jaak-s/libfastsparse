@@ -111,6 +111,32 @@ static char * test_quickSort1000() {
   return 0;
 }
 
+static char * test_sort_sbm() {
+  struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
+  double* x  = malloc(A->ncol * sizeof(double));
+  double* y  = malloc(A->nrow * sizeof(double));
+  double* y2 = malloc(A->nrow * sizeof(double));
+  for (int i = 0; i < A->ncol; i++) {
+    x[i] = sin(i*19 + 0.4) + cos(i*i*3);
+  }
+  A_mul_B(y, A, x);
+  sort_sbm(A);
+  A_mul_B(y2, A, x);
+  for (int i = 0; i < A->nrow; i++) {
+    mu_assert("error, sbm_sort changes A_mul_B", abs(y[i] - y2[i]) < 1e-6);
+  }
+
+  // making sure hilbert curve values are sorted
+  int n = 128;
+  long h = xy2d(n, A->rows[0], A->cols[0]);
+  for (long j = 1; j < A->nnz; j++) {
+    long h2 = xy2d(128, A->rows[j], A->cols[j]);
+    mu_assert("error, sbm_sort does not give right order", h2 > h);
+    h = h2;
+  }
+  return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_A_mul_B);
     mu_run_test(test_At_mul_B);
@@ -119,6 +145,7 @@ static char * all_tests() {
     mu_run_test(test_ceilPower2);
     mu_run_test(test_quickSort);
     mu_run_test(test_quickSort1000);
+    mu_run_test(test_sort_sbm);
     return 0;
 }
 
