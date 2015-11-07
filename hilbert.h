@@ -9,7 +9,8 @@ void rot(int, int*, int*, int, int);
 
 //convert (x,y) to d
 long xy2d (int n, int x, int y) {
-    int rx, ry, s;
+    int rx, ry;
+    long s;
     long d=0;
     for (s=n/2; s>0; s/=2) {
         rx = (x & s) > 0;

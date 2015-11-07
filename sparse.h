@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "hilbert.h"
 #include "quickSort.h"
 
@@ -34,9 +35,7 @@ struct SparseBinaryMatrix* new_sbm(long nnz, int* rows, int* cols) {
 void A_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
   int* rows = A->rows;
   int* cols = A->cols;
-  for (int i = 0; i < A->nrow; i++) {
-    y[i] = 0.0;
-  }
+  memset(y, 0, A->nrow * sizeof(double));
   for (long j = 0; j < A->nnz; j++) {
     y[rows[j]] += x[cols[j]];
   }
@@ -46,9 +45,7 @@ void A_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
 void At_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
   int* rows = A->rows;
   int* cols = A->cols;
-  for (int i = 0; i < A->ncol; i++) {
-    y[i] = 0.0;
-  }
+  memset(y, 0, A->ncol * sizeof(double));
   for (long j = 0; j < A->nnz; j++) {
     y[cols[j]] += x[rows[j]];
   }

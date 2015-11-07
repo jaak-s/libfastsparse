@@ -111,6 +111,23 @@ static char * test_quickSort1000() {
   return 0;
 }
 
+static char * test_hilbert() {
+  int N = 4;
+  int* rows = malloc(N * sizeof(int));
+  int* cols = malloc(N * sizeof(int));
+  int nhilbert = 131072;
+  long h;
+
+  rows[0] = 5931;
+  cols[0] = 91204;
+  h = xy2d(nhilbert, rows[0], cols[0]);
+  d2xy(nhilbert, h, &rows[1], &cols[1]);
+  mu_assert("error, rows[0] != rows[1]", rows[0] == rows[1]);
+  mu_assert("error, cols[0] != cols[1]", cols[0] == cols[1]);
+
+  return 0;
+}
+
 static char * test_sort_sbm() {
   struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
   double* x  = malloc(A->ncol * sizeof(double));
@@ -145,6 +162,7 @@ static char * all_tests() {
     mu_run_test(test_ceilPower2);
     mu_run_test(test_quickSort);
     mu_run_test(test_quickSort1000);
+    mu_run_test(test_hilbert);
     mu_run_test(test_sort_sbm);
     return 0;
 }
