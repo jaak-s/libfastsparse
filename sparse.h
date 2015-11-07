@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include "hilbert.h"
+#include "quickSort.h"
 
 struct SparseBinaryMatrix
 {
@@ -119,5 +121,28 @@ struct SparseBinaryMatrix* read_sbm(const char *filename) {
   return new_sbm(nnz, rows, cols);
 } 
 
+int ceilPower2(int x) {
+  return 1 << (int)ceil(log2(x));
+}
+
+/** sorts SBM according to Hilbert curve */
+void sort_sbm(struct SparseBinaryMatrix *A) {
+  int* rows = A->rows;
+  int* cols = A->cols;
+
+  int maxrc = A->nrow > A->ncol ? A->nrow : A->ncol;
+  int n = ceilPower2(maxrc);
+
+  long* h = malloc(A->nnz * sizeof(long));
+  for (long j = 0; j < A->nnz; j++) {
+    h[j] = xy2d(n, rows[j], cols[j]);
+  }
+  quickSort(h, 0, A->nnz - 1);
+  for (long j = 0; j < A->nnz; j++) {
+    d2xy(n, h[j], &rows[j], &cols[j]);
+  }
+
+  free(h);
+}
 
 #endif /* SPARSE_H */

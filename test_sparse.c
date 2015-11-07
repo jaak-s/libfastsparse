@@ -73,11 +73,52 @@ static char * test_read_sbm() {
   return 0;
 }
 
+static char * test_ceilPower2() {
+  mu_assert("error, ceilPower2(16) != 16", ceilPower2(16) == 16);
+  mu_assert("error, ceilPower2(15) != 16", ceilPower2(15) == 16);
+  mu_assert("error, ceilPower2(17) != 32", ceilPower2(17) == 32);
+  mu_assert("error, ceilPower2(1) != 1", ceilPower2(1) == 1);
+  mu_assert("error, ceilPower2(2^30) != 2^30", ceilPower2(1073741824) == 1073741824);
+  mu_assert("error, ceilPower2(2^30-1) != 2^30", ceilPower2(1073741823) == 1073741824);
+  return 0;
+}
+
+static char * test_quickSort() {
+  long a[] = { 7, 12, 1, -2, 0, 15, 4, 9, 11, 3, -1, 13, 5};
+  int N = 13;
+
+  quickSort(a, 0, N - 1);
+  for (int i = 1; i < N; ++i) {
+    mu_assert("error, quickSort gives wrong order", a[i-1] <= a[i]);
+  }
+  return 0;
+}
+
+static char * test_quickSort1000() {
+  int N = 1000;
+  long* a = malloc(N*sizeof(long));
+  for (int i = 0; i < N; i++) {
+    a[i] = (long)(2000*sin(i*17));
+  }
+
+  quickSort(a, 0, N - 1);
+  for (int i = 1; i < N; ++i) {
+    if (a[i-1] > a[i]) {
+      printf("i = %d, a[i-1] = %ld, a[i] = %ld\n", i, a[i-1], a[i]);
+    }
+    mu_assert("error, quickSort for N=1000 gives wrong order", a[i-1] <= a[i]);
+  }
+  return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_A_mul_B);
     mu_run_test(test_At_mul_B);
     mu_run_test(test_randsubseq);
     mu_run_test(test_read_sbm);
+    mu_run_test(test_ceilPower2);
+    mu_run_test(test_quickSort);
+    mu_run_test(test_quickSort1000);
     return 0;
 }
 
