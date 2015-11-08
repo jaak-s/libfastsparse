@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sparse.h"
+#include "sparse_blocked.h"
 #include "timing.h"
 
 void usage() {
@@ -98,4 +99,15 @@ int main(int argc, char **argv) {
   timing(&wall_stop, &cpu_stop);
 
   printf("[sorted]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+
+  ////// Blocked SBM //////
+  struct BlockedSBM* B = new_bsbm(A, 1024);
+  A_mul_B_blocked(y2, B, x);
+  timing(&wall_start, &cpu_start);
+  for (int i = 0; i < nrepeats; i++) {
+    A_mul_B_blocked(y, B, x);
+  }
+  timing(&wall_stop, &cpu_stop);
+  printf("[sorted+block]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+
 }

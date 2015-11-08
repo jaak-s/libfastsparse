@@ -1,3 +1,5 @@
 .*un~
 test_sparse
 bench_a_mul_b
+*.o
+.*.swp

@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=gnu99 -Wall -DNDEBUG -Wall -O3 -lm -fstrict-aliasing
+CFLAGS=-std=gnu99 -Wall -DNDEBUG -Wall -O3 -fopenmp -lm -fstrict-aliasing
 
 all: test bench
 
@@ -10,4 +10,4 @@ bench:
 	$(CC) bench_a_mul_b.c $(CFLAGS) -o bench_a_mul_b
 
 clean:
-	rm test_sparse bench_a_mul_b
+	rm -f test_sparse bench_a_mul_b
