@@ -18,6 +18,19 @@ void extrema(int* x, long n, int* min, int* max) {
   }
 }
 
+/** returns -1 if A is hilbert sorted
+ *  otherwise idx of the first non-increasing elemetn */
+long check_if_sorted(struct SparseBinaryMatrix *A) {
+  int n = ceilPower2(A->nrow > A->ncol ? A->nrow : A->ncol);
+  long h = xy2d(n, A->rows[0], A->cols[0]);
+  for (long j = 1; j < A->nnz; j++) {
+    long h2 = xy2d(n, A->rows[j], A->cols[j]);
+    if (h2 <= h) return j;
+    h = h2;
+  }
+  return -1;
+}
+
 int main(int argc, char **argv) {
   if (argc <= 1) {
     printf("Need matrix file name.\n");
@@ -61,6 +74,7 @@ int main(int argc, char **argv) {
 
   extrema(A->rows, A->nnz, &min_row, &max_row);
   extrema(A->cols, A->nnz, &min_col, &max_col);
+
   // making sure sbm contents is within bounds
   for (int j = 0; j < A->nnz; j++) {
     if (A->rows[j] < 0 || A->rows[j] >= A->nrow) {
@@ -79,7 +93,7 @@ int main(int argc, char **argv) {
 
   timing(&wall_start, &cpu_start);
   for (int i = 0; i < nrepeats; i++) {
-    A_mul_B(y2, A, x);
+    A_mul_B(y, A, x);
   }
   timing(&wall_stop, &cpu_stop);
 
