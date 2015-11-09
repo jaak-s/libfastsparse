@@ -51,4 +51,22 @@ void rot(int n, int *x, int *y, int rx, int ry) {
     }
 }
 
+// x (row) should be between 0 and n-1
+long row_xy2d(int n, int x, int y) {
+  int y2 = y % n;
+  long nsq = (long)n * (long)n;
+  return xy2d(n, x, y2) + nsq * (y / n);
+}
+
+// returned (x, y) has x within 0 and n - 1
+void row_d2xy(int n, long d, int *x, int *y) {
+  long nsq  = (long)n * (long)n;
+  long h    = d % nsq;
+  int block = d / nsq;
+  d2xy(n, h, x, y);
+
+  *y += block * n;
+}
+
+
 #endif /* HILBERT_H */

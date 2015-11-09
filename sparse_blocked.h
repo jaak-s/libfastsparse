@@ -60,6 +60,29 @@ struct BlockedSBM* new_bsbm(struct SparseBinaryMatrix* A, int block_size) {
   return B;
 }
 
+void sort_bsbm(struct BlockedSBM *B) {
+  for (int block = 0; block < B->nblocks; block++) {
+    int* rows = B->rows[block];
+    int* cols = B->cols[block];
+    int nnz = B->nnz[block];
+    int start_row = B->start_row[block];
+    int n = ceilPower2(B->start_row[block+1] - B->start_row[block]);
+
+    // convert to hilbert, sort, convert back
+    long* h = malloc(nnz * sizeof(long));
+    for (long j = 0; j < nnz; j++) {
+      h[j] = row_xy2d(n, rows[j] - start_row, cols[j]);
+    }
+    quickSort(h, 0, nnz - 1);
+    for (long j = 0; j < nnz; j++) {
+      row_d2xy(n, h[j], &rows[j], &cols[j]);
+      rows[j] += start_row;
+    }
+
+    free(h);
+  }
+}
+
 /** y = B * x */
 void A_mul_B_blocked(double* y, struct BlockedSBM *B, double* x) {
 #pragma omp parallel for schedule(dynamic, 1)

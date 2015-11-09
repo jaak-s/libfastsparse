@@ -141,7 +141,7 @@ static char * test_sort_sbm() {
   sort_sbm(A);
   A_mul_B(y2, A, x);
   for (int i = 0; i < A->nrow; i++) {
-    mu_assert("error, sbm_sort changes A_mul_B", abs(y[i] - y2[i]) < 1e-6);
+    mu_assert("error, sort_sbm changes A_mul_B", abs(y[i] - y2[i]) < 1e-6);
   }
 
   // making sure hilbert curve values are sorted
@@ -149,7 +149,7 @@ static char * test_sort_sbm() {
   long h = xy2d(n, A->rows[0], A->cols[0]);
   for (long j = 1; j < A->nnz; j++) {
     long h2 = xy2d(128, A->rows[j], A->cols[j]);
-    mu_assert("error, sbm_sort does not give right order", h2 > h);
+    mu_assert("error, sort_sbm does not give right order", h2 > h);
     h = h2;
   }
   return 0;
@@ -177,6 +177,37 @@ static char * test_blocked_sbm() {
   return 0;
 }
 
+static char * test_sort_bsbm() {
+  struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
+  struct BlockedSBM *B = new_bsbm(A, 8);
+  double* x  = malloc(B->ncol * sizeof(double));
+  double* y  = malloc(B->nrow * sizeof(double));
+  double* y2 = malloc(B->nrow * sizeof(double));
+  for (int i = 0; i < B->ncol; i++) {
+    x[i] = sin(i*19 + 0.4) + cos(i*i*3);
+  }
+  A_mul_B_blocked(y, B, x);
+  sort_bsbm(B);
+  A_mul_B_blocked(y2, B, x);
+  for (int i = 0; i < B->nrow; i++) {
+    mu_assert("error, sort_bsbm changes A_mul_B", abs(y[i] - y2[i]) < 1e-6);
+  }
+
+  // making sure hilbert curve values are sorted
+  for (int block = 0; block < B->nblocks; block++) {
+    int n  = ceilPower2(B->start_row[block+1] - B->start_row[block]);
+    long h = row_xy2d(n, B->rows[block][0] - B->start_row[block], B->cols[block][0]);
+
+    for (long j = 1; j < B->nnz[block]; j++) {
+      long h2 = row_xy2d(n, B->rows[block][j] - B->start_row[block], B->cols[block][j]);
+      mu_assert("error, sort_bsbm does not give right order", h2 > h);
+      h = h2;
+    }
+  }
+
+  return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_A_mul_B);
     mu_run_test(test_At_mul_B);
@@ -188,6 +219,7 @@ static char * all_tests() {
     mu_run_test(test_hilbert);
     mu_run_test(test_sort_sbm);
     mu_run_test(test_blocked_sbm);
+    mu_run_test(test_sort_bsbm);
     return 0;
 }
 
