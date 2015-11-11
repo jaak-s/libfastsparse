@@ -31,6 +31,15 @@ struct SparseBinaryMatrix* new_sbm(long nnz, int* rows, int* cols) {
   return A;
 }
 
+void transpose(struct SparseBinaryMatrix *A) {
+  int* tmp = A->rows;
+  A->rows = A->cols;
+  A->cols = tmp;
+  int ntmp = A->nrow;
+  A->nrow = A->ncol;
+  A->ncol = ntmp;
+}
+
 /** y = A * x */
 void A_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
   int* rows = A->rows;
