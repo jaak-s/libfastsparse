@@ -6,7 +6,8 @@
 
 void usage() {
   printf("Usage:\n");
-  printf("  bench_a_mul_c <matrix_file>\n");
+  printf("  bench_a_mul_c <matrix_file> [block_size] [-t]\n");
+  printf("  -t  transpose matrix\n");
 }
 
 void extrema(int* x, long n, int* min, int* max) {
@@ -39,10 +40,23 @@ int main(int argc, char **argv) {
     exit(1);
   }
   char* filename = argv[1];
+  int block_size = 1024;
+  int t = 0;
+  if (argc >= 2) {
+    block_size = atoi(argv[2]);
+  }
+  if (argc >= 3) {
+    if (strcmp("-t", argv[3]) == 0) {
+      t = 1;
+    }
+  }
   int nrepeats = 100;
 
   printf("Benchmarking A*x with '%s'.\n", filename);
   struct SparseBinaryMatrix* A = read_sbm(filename);
+  if (t) {
+    transpose(A);
+  }
   printf("Size of A is %d x %d.\n", A->nrow, A->ncol);
   printf("Number of repeats = %d\n", nrepeats);
 
@@ -101,13 +115,21 @@ int main(int argc, char **argv) {
   printf("[sorted]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
 
   ////// Blocked SBM //////
-  struct BlockedSBM* B = new_bsbm(A, 1024);
+  printf("Block size = %d\n", block_size);
+  struct BlockedSBM* B = new_bsbm(A, block_size);
   A_mul_B_blocked(y2, B, x);
   timing(&wall_start, &cpu_start);
   for (int i = 0; i < nrepeats; i++) {
     A_mul_B_blocked(y, B, x);
   }
   timing(&wall_stop, &cpu_stop);
-  printf("[sorted+block]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+  printf("[block]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
 
+  sort_bsbm(B);
+  timing(&wall_start, &cpu_start);
+  for (int i = 0; i < nrepeats; i++) {
+    A_mul_B_blocked(y, B, x);
+  }
+  timing(&wall_stop, &cpu_stop);
+  printf("[sorted+block]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
 }
