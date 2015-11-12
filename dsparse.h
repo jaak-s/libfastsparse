@@ -1,11 +1,11 @@
-#ifndef SPARSE_H
-#define SPARSE_H
+#ifndef DSPARSE_H
+#define DSPARSE_H
 
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 #include "hilbert.h"
-#include "quickSort.h"
+#include "quickSortD.h"
 
 struct SparseDoubleMatrix
 {
@@ -18,22 +18,18 @@ struct SparseDoubleMatrix
 };
 
 /** constructor, computes nrow and ncol from data */
-struct SparseDoubleMatrix* new_sdm(long nnz, int* rows, int* cols, double* vals) {
+struct SparseDoubleMatrix* new_sdm(long nrow, long ncol, long nnz, int* rows, int* cols, double* vals) {
   struct SparseDoubleMatrix *A = malloc(sizeof(struct SparseDoubleMatrix));
   A->nnz  = nnz;
   A->rows = rows;
   A->cols = cols;
   A->vals = vals;
-  A->nrow = 0;
-  A->ncol = 0;
-  for (int i = 0; i < nnz; i++) {
-    if (rows[i] >= A->nrow) A->nrow = rows[i] + 1;
-    if (cols[i] >= A->ncol) A->ncol = cols[i] + 1;
-  }
+  A->nrow = nrow;
+  A->ncol = ncol;
   return A;
 }
 
-void transpose(struct SparseDoubleMatrix *A) {
+void sdm_transpose(struct SparseDoubleMatrix *A) {
   int* tmp = A->rows;
   A->rows = A->cols;
   A->cols = tmp;
@@ -43,17 +39,18 @@ void transpose(struct SparseDoubleMatrix *A) {
 }
 
 /** y = A * x */
-void A_mul_B(double* y, struct SparseDoubleMatrix *A, double* x) {
+void sdm_A_mul_B(double* y, struct SparseDoubleMatrix *A, double* x) {
   int* rows = A->rows;
   int* cols = A->cols;
+  double* vals = A->vals;
   memset(y, 0, A->nrow * sizeof(double));
   for (long j = 0; j < A->nnz; j++) {
-    y[rows[j]] += x[cols[j]];
+    y[rows[j]] += x[cols[j]] * vals[j];
   }
 }
 
 /** y = A' * x */
-void At_mul_B(double* y, struct SparseDoubleMatrix *A, double* x) {
+void sdm_At_mul_B(double* y, struct SparseDoubleMatrix *A, double* x) {
   int* rows = A->rows;
   int* cols = A->cols;
   double* vals = A->vals;
@@ -65,7 +62,7 @@ void At_mul_B(double* y, struct SparseDoubleMatrix *A, double* x) {
 
 long read_long(FILE* fh) {
   long value;
-  result1 = fread(&value, sizeof(long), 1, fh);
+  size_t result1 = fread(&value, sizeof(long), 1, fh);
   if (result1 != 1) {
     fprintf( stderr, "File reading error for a long. File is corrupt.\n");
     exit(1);
@@ -75,7 +72,7 @@ long read_long(FILE* fh) {
 
 struct SparseDoubleMatrix* read_sdm(const char *filename) {
   FILE* fh = fopen( filename, "r" );
-  size_t result1, result2;
+  size_t result1, result2, result3;
   if (fh == NULL) {
     fprintf( stderr, "File error: %s\n", filename );
     exit(1);
@@ -101,7 +98,7 @@ struct SparseDoubleMatrix* read_sdm(const char *filename) {
     cols[i]--;
   }
 
-  return new_sdm(nnz, rows, cols, vals);
+  return new_sdm(nrow, ncol, nnz, rows, cols, vals);
 } 
 
 /** sorts SDM according to Hilbert curve */
@@ -116,8 +113,7 @@ void sort_sdm(struct SparseDoubleMatrix *A) {
   for (long j = 0; j < A->nnz; j++) {
     h[j] = xy2d(n, rows[j], cols[j]);
   }
-  quickSort(h, 0, A->nnz - 1);
-  ///////// BUG: double values are not sorted!!!!
+  quickSortD(h, 0, A->nnz - 1, A->vals);
   for (long j = 0; j < A->nnz; j++) {
     d2xy(n, h[j], &rows[j], &cols[j]);
   }
@@ -125,4 +121,4 @@ void sort_sdm(struct SparseDoubleMatrix *A) {
   free(h);
 }
 
-#endif /* SPARSE_H */
+#endif /* DSPARSE_H */

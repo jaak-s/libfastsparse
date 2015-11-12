@@ -5,6 +5,8 @@
 #include "minunit.h"
 #include "sparse.h"
 #include "sparse_blocked.h"
+#include "quickSortD.h"
+#include "dsparse.h"
 #include "linalg.h"
 
 int tests_run = 0;
@@ -113,6 +115,23 @@ static char * test_quickSort1000() {
   return 0;
 }
 
+static char * test_quickSortD() {
+  long a[]   = { 7,  12, 1, -2, 0, 15, 4,   9, 11, 3,  -1, 13,  5};
+  double v[] = { 1, 0.5, 3, -1, 7,  9, 0.1, 2, -3, 0, 1.2,  8, 10};
+  int N = 13;
+
+  double vs[] = { -1.0, 1.2, 7.0, 3.0, 0.0, 0.1, 10.0, 1.0, 2.0, -3.0, 0.5, 8.0, 9.0 };
+
+  quickSortD(a, 0, N - 1, v);
+  for (int i = 1; i < N; i++) {
+    mu_assert("error, quickSortD gives wrong order", a[i-1] <= a[i]);
+  }
+  for (int i = 0; i < N; i++) {
+    mu_assert("error, quickSortD gives wrong order for double[] v", vs[i] == v[i]);
+  }
+  return 0;
+}
+
 static char * test_hilbert() {
   int N = 4;
   int* rows = malloc(N * sizeof(int));
@@ -209,6 +228,50 @@ static char * test_sort_bsbm() {
   return 0;
 }
 
+//// tests for SparseDoubleMatrix
+struct SparseDoubleMatrix* make_sdm() {
+  struct SparseDoubleMatrix *A = malloc(sizeof(struct SparseDoubleMatrix));
+  A->nrow = 6;
+  A->ncol = 4;
+  A->nnz  = 11;
+  int *rows = malloc(A->nnz * sizeof(int));
+  int *cols = malloc(A->nnz * sizeof(int));
+  double *vals = malloc(A->nnz * sizeof(double));
+  memcpy(rows, (int []){1, 1, 3, 4, 1, 4, 5, 0, 1, 2, 4}, A->nnz * sizeof(int));
+  memcpy(cols, (int []){0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3}, A->nnz * sizeof(int));
+  memcpy(vals, (double []){0.65, 0.84, 0.54, 0.59, 0.51, 0.27, 0.23, 0.94, 0.66, 0.31, 0.92}, A->nnz * sizeof(double));
+  A->rows = rows;
+  A->cols = cols;
+  A->vals = vals;
+  return A;
+}
+
+static char * test_A_mul_B_sdm() {
+  struct SparseDoubleMatrix *A = make_sdm();
+  double x[] = {0.5, -0.7, 1.9, 2.3};
+  double* y = malloc(A->nrow * sizeof(double));
+  double yt[] = {2.162, 2.224, 0.713, -0.378, 2.216, 0.437};
+  // multiplication
+  sdm_A_mul_B(y, A, x);
+  for (int i = 0; i < A->nrow; i++) {
+    mu_assert("error, sdm_A_mul_B is wrong", y[i] == yt[i]);
+  }
+  return 0;
+}
+
+static char * test_At_mul_B_sdm() {
+  struct SparseDoubleMatrix *A = make_sdm();
+  double x[] = {0.59, 0.37, 0.14, 0.21, 0.40, 0.81};
+  double y[] = {0, 0, 0, 0};
+  double yt[] = {0.2405, 0.6548, 0.4807, 1.2102};
+  // multiplication
+  sdm_At_mul_B(y, A, x);
+  for (int i = 0; i < A->nrow; i++) {
+    mu_assert("error, sdm_A_mul_B is wrong", abs(y[i] - yt[i]) < 1e-6);
+  }
+  return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_A_mul_B);
     mu_run_test(test_At_mul_B);
@@ -217,10 +280,13 @@ static char * all_tests() {
     mu_run_test(test_ceilPower2);
     mu_run_test(test_quickSort);
     mu_run_test(test_quickSort1000);
+    mu_run_test(test_quickSortD);
     mu_run_test(test_hilbert);
     mu_run_test(test_sort_sbm);
     mu_run_test(test_blocked_sbm);
     mu_run_test(test_sort_bsbm);
+    mu_run_test(test_A_mul_B_sdm);
+    mu_run_test(test_At_mul_B_sdm);
     return 0;
 }
 
