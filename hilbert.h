@@ -6,6 +6,11 @@
 long xy2d(int, int, int);
 void d2xy(int, long, int*, int*);
 void rot(int, int*, int*, int, int);
+int ceilPower2(int);
+
+int ceilPower2(int x) {
+  return 1 << (int)ceil(log2(x));
+}
 
 //convert (x,y) to d
 long xy2d (int n, int x, int y) {

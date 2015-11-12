@@ -5,6 +5,7 @@
 #include "minunit.h"
 #include "sparse.h"
 #include "sparse_blocked.h"
+#include "linalg.h"
 
 int tests_run = 0;
 
