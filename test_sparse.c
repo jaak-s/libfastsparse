@@ -272,6 +272,20 @@ static char * test_At_mul_B_sdm() {
   return 0;
 }
 
+static char * test_read_sdm() {
+  struct SparseDoubleMatrix *A = read_sdm("data/sdm-100-50.data");
+  mu_assert("error, nrow != 100", A->nrow == 100);
+  mu_assert("error, ncol != 50",  A->ncol == 50);
+  mu_assert("error, nnz != 504",  A->nnz  == 470);
+  mu_assert("error, rows[1] != 27", A->rows[1] == 27);
+  mu_assert("error, cols[1] != 0", A->cols[1] == 0);
+  mu_assert("error, vals[1] != 0.616153", abs(A->vals[1] - 0.616153) < 1e-5);
+  mu_assert("error, rows[469] != 40", A->rows[469] == 40);
+  mu_assert("error, cols[469] != 49", A->cols[469] == 49);
+  mu_assert("error, vals[469] != 0.108172", abs(A->vals[469] - 0.108172) < 1e-5);
+  return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_A_mul_B);
     mu_run_test(test_At_mul_B);
@@ -287,6 +301,7 @@ static char * all_tests() {
     mu_run_test(test_sort_bsbm);
     mu_run_test(test_A_mul_B_sdm);
     mu_run_test(test_At_mul_B_sdm);
+    mu_run_test(test_read_sdm);
     return 0;
 }
 
