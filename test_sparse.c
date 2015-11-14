@@ -193,7 +193,7 @@ static char * test_blocked_sbm() {
   A_mul_B(y, A, x);
   A_mul_B_blocked(y2, B, x);
   double d = dist(y2, y, A->nrow);
-  mu_assert("error, dist(y2,y) = %f > 1e-6", d < 1e-6); 
+  mu_assert("error, dist(y2,y) > 1e-6", d < 1e-6); 
   return 0;
 }
 
@@ -286,6 +286,33 @@ static char * test_read_sdm() {
   return 0;
 }
 
+static char * test_blocked_sdm() {
+  struct SparseDoubleMatrix *A = read_sdm("data/sdm-100-50.data");
+  struct BlockedSDM *B = new_bsdm(A, 8);
+  mu_assert("error, B->nrow != A->nrow", B->nrow == A->nrow);
+  mu_assert("error, B->ncol != A->ncol", B->ncol == A->ncol);
+  mu_assert("error, B->nblocks != 13", B->nblocks == 13);
+  mu_assert("error, B->start_row[0] != 100", B->start_row[0] == 0);
+  mu_assert("error, B->start_row[1] != 100", B->start_row[1] == 8);
+  mu_assert("error, B->start_row[13] != 100", B->start_row[13] == 100);
+  double* x  = malloc(B->ncol * sizeof(double));
+  double* y  = malloc(B->nrow * sizeof(double));
+  double* y2 = malloc(B->nrow * sizeof(double));
+  double* y3 = malloc(B->nrow * sizeof(double));
+  for (int i = 0; i < A->ncol; i++) {
+    x[i] = sin(i*17 + 0.2);
+  }
+  sdm_A_mul_B(y, A, x);
+  bsdm_A_mul_B(y2, B, x);
+  sort_bsdm(B);
+  bsdm_A_mul_B(y3, B, x);
+  double d  = dist(y2, y, A->nrow);
+  double d3 = dist(y3, y, A->nrow);
+  mu_assert("error, dist(y2,y) > 1e-6", d < 1e-6); 
+  mu_assert("error, dist(y3,y) > 1e-6", d3 < 1e-6); 
+  return 0;
+}
+
 static char * all_tests() {
     mu_run_test(test_A_mul_B);
     mu_run_test(test_At_mul_B);
@@ -302,6 +329,7 @@ static char * all_tests() {
     mu_run_test(test_A_mul_B_sdm);
     mu_run_test(test_At_mul_B_sdm);
     mu_run_test(test_read_sdm);
+    mu_run_test(test_blocked_sdm);
     return 0;
 }
 
