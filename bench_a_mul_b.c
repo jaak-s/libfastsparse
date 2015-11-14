@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
   }
   timing(&wall_stop, &cpu_stop);
 
-  printf("[sorted]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+  printf("[sort]  \tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
 
   ////// Blocked SBM //////
   printf("Block size = %d\n", block_size);
@@ -131,5 +131,13 @@ int main(int argc, char **argv) {
     A_mul_B_blocked(y, B, x);
   }
   timing(&wall_stop, &cpu_stop);
-  printf("[sorted+block]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+  printf("[sort+block]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+
+  sort_bsbm_byrow(B);
+  timing(&wall_start, &cpu_start);
+  for (int i = 0; i < nrepeats; i++) {
+    A_mul_B_blocked(y, B, x);
+  }
+  timing(&wall_stop, &cpu_stop);
+  printf("[rowsort+block]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
 }

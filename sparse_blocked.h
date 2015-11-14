@@ -83,6 +83,26 @@ void sort_bsbm(struct BlockedSBM *B) {
   }
 }
 
+void sort_bsbm_byrow(struct BlockedSBM *B) {
+  for (int block = 0; block < B->nblocks; block++) {
+    int* rows = B->rows[block];
+    int* cols = B->cols[block];
+    int nnz = B->nnz[block];
+
+    long* h = malloc(nnz * sizeof(long));
+    for (long j = 0; j < nnz; j++) {
+      h[j] = rows[j] * B->ncol + cols[j];
+    }
+    quickSort(h, 0, nnz - 1);
+    for (long j = 0; j < nnz; j++) {
+      rows[j] = h[j] / B->ncol;
+      cols[j] = h[j] % B->ncol;
+    }
+
+    free(h);
+  }
+}
+
 /** y = B * x */
 void A_mul_B_blocked(double* y, struct BlockedSBM *B, double* x) {
 #pragma omp parallel for schedule(dynamic, 1)
