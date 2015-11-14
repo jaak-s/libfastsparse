@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include "minunit.h"
 #include "sparse.h"
-#include "sparse_blocked.h"
 #include "quickSortD.h"
 #include "dsparse.h"
 #include "linalg.h"

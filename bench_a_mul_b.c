@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sparse.h"
-#include "sparse_blocked.h"
 #include "timing.h"
 
 void usage() {
