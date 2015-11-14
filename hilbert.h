@@ -60,7 +60,8 @@ void rot(int n, int *x, int *y, int rx, int ry) {
 long row_xy2d(int n, int x, int y) {
   int y2 = y % n;
   long nsq = (long)n * (long)n;
-  return xy2d(n, x, y2) + nsq * (y / n);
+  // order of (x,y) is reversed for better cache locality
+  return xy2d(n, y2, x) + nsq * (y / n);
 }
 
 // returned (x, y) has x within 0 and n - 1
@@ -68,7 +69,7 @@ void row_d2xy(int n, long d, int *x, int *y) {
   long nsq  = (long)n * (long)n;
   long h    = d % nsq;
   int block = d / nsq;
-  d2xy(n, h, x, y);
+  d2xy(n, h, y, x);
 
   *y += block * n;
 }

@@ -197,6 +197,22 @@ static char * test_blocked_sbm() {
   return 0;
 }
 
+static char * test_row_xy2d() {
+  mu_assert("row_xy2d(16, 0, 0) != 0", row_xy2d(16, 0, 0) == 0);
+  mu_assert("row_xy2d(16, 0, 15) != 255", row_xy2d(16, 0, 15) == 255);
+  mu_assert("row_xy2d(16, 0, 16) != 255", row_xy2d(16, 0, 16) == 256);
+  mu_assert("row_xy2d(16, 0, 31) != 255", row_xy2d(16, 0, 31) == 511);
+  mu_assert("row_xy2d(16, 1, 0) != 0", row_xy2d(16, 1, 0) == 3);
+
+  int x, y;
+  row_d2xy(16,   0, &x, &y); mu_assert("row_d2xy(16, 0, x, y) -> (0, 0)", x == 0 && y == 0);
+  row_d2xy(16, 255, &x, &y); mu_assert("row_d2xy(16, 255, x, y) -> (0,15)", x == 0 && y == 15);
+  row_d2xy(16, 256, &x, &y); mu_assert("row_d2xy(16, 256, x, y) -> (0,16)", x == 0 && y == 16);
+  row_d2xy(16, 511, &x, &y); mu_assert("row_d2xy(16, 511, x, y) -> (0,31)", x == 0 && y == 31);
+  row_d2xy(16,   3, &x, &y); mu_assert("row_d2xy(16, 3, x, y) -> (1, 0)", x == 1 && y == 0);
+  return 0;
+}
+
 static char * test_sort_bsbm() {
   struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
   struct BlockedSBM *B = new_bsbm(A, 8);
@@ -330,6 +346,7 @@ static char * all_tests() {
     mu_run_test(test_At_mul_B_sdm);
     mu_run_test(test_read_sdm);
     mu_run_test(test_blocked_sdm);
+    mu_run_test(test_row_xy2d);
     return 0;
 }
 

@@ -42,10 +42,10 @@ int main(int argc, char **argv) {
   char* filename = argv[1];
   int block_size = 1024;
   int t = 0;
-  if (argc >= 2) {
+  if (argc >= 3) {
     block_size = atoi(argv[2]);
   }
-  if (argc >= 3) {
+  if (argc >= 4) {
     if (strcmp("-t", argv[3]) == 0) {
       t = 1;
     }
