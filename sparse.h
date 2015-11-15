@@ -243,7 +243,7 @@ void sort_bsbm_byrow(struct BlockedSBM *B) {
 }
 
 /** y = B * x */
-void A_mul_B_blocked(double* y, struct BlockedSBM *B, double* x) {
+void bsbm_A_mul_B(double* y, struct BlockedSBM *B, double* x) {
 #pragma omp parallel for schedule(dynamic, 1)
   for (int block = 0; block < B->nblocks; block++) {
     int* rows = B->rows[block];

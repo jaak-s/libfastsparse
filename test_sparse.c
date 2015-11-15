@@ -7,6 +7,7 @@
 #include "quickSortD.h"
 #include "dsparse.h"
 #include "linalg.h"
+#include "cg.h"
 
 int tests_run = 0;
 
@@ -37,6 +38,19 @@ static char * test_A_mul_B() {
   mu_assert("error, y[1] != 1.9", y[1] == 1.9);
   mu_assert("error, y[2] !=-0.7", y[2] ==-0.7);
   mu_assert("error, y[3] != 2.4", y[3] == 2.4);
+  return 0;
+}
+
+static char * test_A_mul_B2() {
+  struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
+  double* x  = malloc(A->ncol * sizeof(double));
+  double* y  = malloc(A->nrow * sizeof(double));
+  for (int i = 0; i < A->ncol; i++) {
+    x[i] = sin(i*19 + 0.4) + cos(i*i*3);
+  }
+  A_mul_B(y, A, x);
+  mu_assert("error, y[0]  != 1.70095",   abs(y[0] - 1.70095) < 1e-4);
+  mu_assert("error, y[99] != -0.174905", abs(y[99] +0.174905) < 1e-4);
   return 0;
 }
 
@@ -190,7 +204,7 @@ static char * test_blocked_sbm() {
     x[i] = sin(i*17 + 0.2);
   }
   A_mul_B(y, A, x);
-  A_mul_B_blocked(y2, B, x);
+  bsbm_A_mul_B(y2, B, x);
   double d = dist(y2, y, A->nrow);
   mu_assert("error, dist(y2,y) > 1e-6", d < 1e-6); 
   return 0;
@@ -221,9 +235,9 @@ static char * test_sort_bsbm() {
   for (int i = 0; i < B->ncol; i++) {
     x[i] = sin(i*19 + 0.4) + cos(i*i*3);
   }
-  A_mul_B_blocked(y, B, x);
+  bsbm_A_mul_B(y, B, x);
   sort_bsbm(B);
-  A_mul_B_blocked(y2, B, x);
+  bsbm_A_mul_B(y2, B, x);
   for (int i = 0; i < B->nrow; i++) {
     mu_assert("error, sort_bsbm changes A_mul_B", abs(y[i] - y2[i]) < 1e-6);
   }
@@ -328,8 +342,57 @@ static char * test_blocked_sdm() {
   return 0;
 }
 
+static char * test_dot_normsq() {
+  double x[] = {0.12, -0.82, 1.3, 0.5};
+  double y[] = {6.12, 0.19, 3.4, -4.1};
+
+  mu_assert("pnormsq(x,4) != 2.6268", abs(pnormsq(x,4) - 2.6268) < 1e-8);
+  mu_assert("pnormsq(y,4) != 65.8605", pnormsq(y,4) == 65.8605);
+  mu_assert("pdot(x,y,4)  != 2.9486", pdot(x, y, 4) == 2.9486);
+
+  return 0;
+}
+
+static char * test_cg() {
+  struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
+  sort_sbm(A);
+  struct BlockedSBM *B = new_bsbm(A, 8);
+  transpose(A);
+  struct BlockedSBM *Bt = new_bsbm(A, 8);
+
+  int F = B->ncol;
+  double* x  = malloc(F * sizeof(double));
+  double* b  = malloc(F * sizeof(double));
+
+  for (int i = 0; i < F; i++) {
+    b[i] = sin(i*19 + 0.4) + cos(i*i*3);
+  }
+  int numIter = 0;
+
+  double lambda = 5.0;
+  bsbm_cg(x, B, Bt, b, lambda, 1e-6, &numIter);
+
+  // verifying result:
+  struct SparseBinaryMatrix *X = read_sbm("data/sbm-100-50.data");
+  double* tmp  = malloc(X->nrow * sizeof(double));
+  double* tmp2 = malloc(X->ncol * sizeof(double));
+  A_mul_B(tmp, X, x);
+  At_mul_B(tmp2, X, tmp);
+  for (int i = 0; i < B->ncol; i++) {
+    tmp2[i] += lambda * x[i];
+  }
+  double d = dist(tmp2, b, X->ncol);
+  mu_assert("x[0] != 0.0638578", abs(x[0] - 0.0638578) < 1e-4);
+  mu_assert("x[1] !=-0.0302702", abs(x[1] + 0.0302702) < 1e-4);
+  mu_assert("resid < 1e-5", d < 1e-5);
+  
+  return 0;
+}
+
+
 static char * all_tests() {
     mu_run_test(test_A_mul_B);
+    mu_run_test(test_A_mul_B2);
     mu_run_test(test_At_mul_B);
     mu_run_test(test_randsubseq);
     mu_run_test(test_read_sbm);
@@ -346,6 +409,8 @@ static char * all_tests() {
     mu_run_test(test_read_sdm);
     mu_run_test(test_blocked_sdm);
     mu_run_test(test_row_xy2d);
+    mu_run_test(test_dot_normsq);
+    mu_run_test(test_cg);
     return 0;
 }
 

@@ -116,10 +116,10 @@ int main(int argc, char **argv) {
   ////// Blocked SBM //////
   printf("Block size = %d\n", block_size);
   struct BlockedSBM* B = new_bsbm(A, block_size);
-  A_mul_B_blocked(y2, B, x);
+  bsbm_A_mul_B(y2, B, x);
   timing(&wall_start, &cpu_start);
   for (int i = 0; i < nrepeats; i++) {
-    A_mul_B_blocked(y, B, x);
+    bsbm_A_mul_B(y, B, x);
   }
   timing(&wall_stop, &cpu_stop);
   printf("[block]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
   sort_bsbm(B);
   timing(&wall_start, &cpu_start);
   for (int i = 0; i < nrepeats; i++) {
-    A_mul_B_blocked(y, B, x);
+    bsbm_A_mul_B(y, B, x);
   }
   timing(&wall_stop, &cpu_stop);
   printf("[sort+block]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
   sort_bsbm_byrow(B);
   timing(&wall_start, &cpu_start);
   for (int i = 0; i < nrepeats; i++) {
-    A_mul_B_blocked(y, B, x);
+    bsbm_A_mul_B(y, B, x);
   }
   timing(&wall_stop, &cpu_stop);
   printf("[rowsort+block]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
