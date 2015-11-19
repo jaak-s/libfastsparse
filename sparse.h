@@ -18,7 +18,7 @@ struct SparseBinaryMatrix
 
 /** constructor, computes nrow and ncol from data */
 struct SparseBinaryMatrix* new_sbm(long nnz, int* rows, int* cols) {
-  struct SparseBinaryMatrix *A = malloc(sizeof(struct SparseBinaryMatrix));
+  struct SparseBinaryMatrix *A = (struct SparseBinaryMatrix*)malloc(sizeof(struct SparseBinaryMatrix));
   A->nnz  = nnz;
   A->rows = rows;
   A->cols = cols;

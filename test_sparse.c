@@ -347,8 +347,8 @@ static char * test_dot_normsq() {
   double y[] = {6.12, 0.19, 3.4, -4.1};
 
   mu_assert("pnormsq(x,4) != 2.6268", abs(pnormsq(x,4) - 2.6268) < 1e-8);
-  mu_assert("pnormsq(y,4) != 65.8605", pnormsq(y,4) == 65.8605);
-  mu_assert("pdot(x,y,4)  != 2.9486", pdot(x, y, 4) == 2.9486);
+  mu_assert("pnormsq(y,4) != 65.8605", abs(pnormsq(y,4) - 65.8605) < 1e-8);
+  mu_assert("pdot(x,y,4)  != 2.9486", abs(pdot(x, y, 4) - 2.9486) < 1e-8);
 
   return 0;
 }
