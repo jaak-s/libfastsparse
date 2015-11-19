@@ -38,8 +38,8 @@ void bsbm_cg(double* x,
 
   tol = tol * sqrt(pnormsq(b, F));
   // init:
-  double* r = malloc(F * sizeof(double));
-  double* p = malloc(F * sizeof(double));
+  double* r = (double*)malloc(F * sizeof(double));
+  double* p = (double*)malloc(F * sizeof(double));
 #pragma omp parallel for schedule(static)
   for (int i = 0; i < F; i++) {
     x[i] = 0.0;
@@ -47,8 +47,8 @@ void bsbm_cg(double* x,
     p[i] = b[i];
   }
   double rsq_old = pnormsq(r, F);
-  double* AAp = malloc(F * sizeof(double));
-  double* tmp = malloc(N * sizeof(double));
+  double* AAp = (double*)malloc(F * sizeof(double));
+  double* tmp = (double*)malloc(N * sizeof(double));
 
   int iter;
   for (iter = 0; iter < F; iter++) {

@@ -19,7 +19,7 @@ struct SparseDoubleMatrix
 
 /** constructor, computes nrow and ncol from data */
 struct SparseDoubleMatrix* new_sdm(long nrow, long ncol, long nnz, int* rows, int* cols, double* vals) {
-  struct SparseDoubleMatrix *A = malloc(sizeof(struct SparseDoubleMatrix));
+  struct SparseDoubleMatrix *A = (struct SparseDoubleMatrix*)malloc(sizeof(struct SparseDoubleMatrix));
   A->nnz  = nnz;
   A->rows = rows;
   A->cols = cols;
@@ -81,9 +81,9 @@ struct SparseDoubleMatrix* read_sdm(const char *filename) {
   long ncol = read_long(fh);
   long nnz  = read_long(fh);
   // reading data
-  int* rows = malloc(nnz * sizeof(int));
-  int* cols = malloc(nnz * sizeof(int));
-  double* vals = malloc(nnz * sizeof(double));
+  int* rows = (int*)malloc(nnz * sizeof(int));
+  int* cols = (int*)malloc(nnz * sizeof(int));
+  double* vals = (double*)malloc(nnz * sizeof(double));
   result1 = fread(rows, sizeof(int), nnz, fh);
   result2 = fread(cols, sizeof(int), nnz, fh);
   result3 = fread(vals, sizeof(double), nnz, fh);
@@ -109,7 +109,7 @@ void sort_sdm(struct SparseDoubleMatrix *A) {
   int maxrc = A->nrow > A->ncol ? A->nrow : A->ncol;
   int n = ceilPower2(maxrc);
 
-  long* h = malloc(A->nnz * sizeof(long));
+  long* h = (long*)malloc(A->nnz * sizeof(long));
   for (long j = 0; j < A->nnz; j++) {
     h[j] = xy2d(n, rows[j], cols[j]);
   }
@@ -137,35 +137,35 @@ struct BlockedSDM {
 
 /** constructor for blocked rows */
 struct BlockedSDM* new_bsdm(struct SparseDoubleMatrix* A, int block_size) {
-  struct BlockedSDM *B = malloc(sizeof(struct BlockedSDM));
+  struct BlockedSDM *B = (struct BlockedSDM*)malloc(sizeof(struct BlockedSDM));
   B->nrow = A->nrow;
   B->ncol = A->ncol;
   B->nblocks = (int)ceil(A->nrow / (double)block_size);
-  B->nnz     = malloc(B->nblocks * sizeof(int));
+  B->nnz     = (int*)malloc(B->nblocks * sizeof(int));
 
   // array of starting rows, including the last
-  B->start_row = malloc((B->nblocks + 1) * sizeof(int));
+  B->start_row = (int*)malloc((B->nblocks + 1) * sizeof(int));
   for (int i = 0; i < B->nblocks; i++) {
     B->start_row[i] = i * block_size;
     B->nnz[i] = 0;
   }
   B->start_row[B->nblocks] = B->nrow;
   
-  B->rows = malloc(B->nblocks * sizeof(int*));
-  B->cols = malloc(B->nblocks * sizeof(int*));
-  B->vals = malloc(B->nblocks * sizeof(double*));
+  B->rows = (int**)malloc(B->nblocks * sizeof(int*));
+  B->cols = (int**)malloc(B->nblocks * sizeof(int*));
+  B->vals = (double**)malloc(B->nblocks * sizeof(double*));
 
   // counting nnz in each block
   for (long j = 0; j < A->nnz; j++) {
     int block = A->rows[j] / block_size;
     B->nnz[block]++;
   }
-  int* bcounts = malloc(B->nblocks * sizeof(int));
+  int* bcounts = (int*)malloc(B->nblocks * sizeof(int));
   for (int i = 0; i < B->nblocks; i++) {
     bcounts[i] = 0;
-    B->rows[i] = malloc(B->nnz[i] * sizeof(int));
-    B->cols[i] = malloc(B->nnz[i] * sizeof(int));
-    B->vals[i] = malloc(B->nnz[i] * sizeof(double));
+    B->rows[i] = (int*)malloc(B->nnz[i] * sizeof(int));
+    B->cols[i] = (int*)malloc(B->nnz[i] * sizeof(int));
+    B->vals[i] = (double*)malloc(B->nnz[i] * sizeof(double));
   }
 
   for (long j = 0; j < A->nnz; j++) {
@@ -206,7 +206,7 @@ void sort_bsdm(struct BlockedSDM *B) {
     int n = ceilPower2(B->start_row[block+1] - B->start_row[block]);
 
     // convert to hilbert, sort, convert back
-    long* h = malloc(nnz * sizeof(long));
+    long* h = (long*)malloc(nnz * sizeof(long));
     for (long j = 0; j < nnz; j++) {
       h[j] = row_xy2d(n, rows[j] - start_row, cols[j]);
     }

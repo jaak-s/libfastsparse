@@ -12,12 +12,12 @@
 int tests_run = 0;
 
 struct SparseBinaryMatrix* make_sbm() {
-  struct SparseBinaryMatrix *A = malloc(sizeof(struct SparseBinaryMatrix));
+  struct SparseBinaryMatrix *A = (struct SparseBinaryMatrix*)malloc(sizeof(struct SparseBinaryMatrix));
   A->nrow = 4;
   A->ncol = 3;
   A->nnz  = 5;
-  int* rows = malloc(A->nnz * sizeof(int));
-  int* cols = malloc(A->nnz * sizeof(int));
+  int* rows = (int*)malloc(A->nnz * sizeof(int));
+  int* cols = (int*)malloc(A->nnz * sizeof(int));
   A->rows = rows;
   A->cols = cols;
   rows[0] = 0; rows[1] = 3; rows[2] = 3; rows[3] = 1; rows[4] = 2;
@@ -27,8 +27,8 @@ struct SparseBinaryMatrix* make_sbm() {
 
 static char * test_A_mul_B() {
   struct SparseBinaryMatrix *A = make_sbm();
-  double* x = malloc(A->ncol * sizeof(double));
-  double* y = malloc(A->nrow * sizeof(double));
+  double* x = (double*)malloc(A->ncol * sizeof(double));
+  double* y = (double*)malloc(A->nrow * sizeof(double));
   x[0] = 0.5;
   x[1] = -0.7;
   x[2] = 1.9;
@@ -43,8 +43,8 @@ static char * test_A_mul_B() {
 
 static char * test_A_mul_B2() {
   struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
-  double* x  = malloc(A->ncol * sizeof(double));
-  double* y  = malloc(A->nrow * sizeof(double));
+  double* x  = (double*)malloc(A->ncol * sizeof(double));
+  double* y  = (double*)malloc(A->nrow * sizeof(double));
   for (int i = 0; i < A->ncol; i++) {
     x[i] = sin(i*19 + 0.4) + cos(i*i*3);
   }
@@ -56,8 +56,8 @@ static char * test_A_mul_B2() {
 
 static char * test_At_mul_B() {
   struct SparseBinaryMatrix *A = make_sbm();
-  double* x = malloc(A->nrow * sizeof(double));
-  double* y = malloc(A->ncol * sizeof(double));
+  double* x = (double*)malloc(A->nrow * sizeof(double));
+  double* y = (double*)malloc(A->ncol * sizeof(double));
   x[0] = 0.2;
   x[1] = 1.3;
   x[2] =-0.7;
@@ -72,7 +72,7 @@ static char * test_At_mul_B() {
 
 static char * test_randsubseq() {
   srand48(1234567890);
-  long* x = malloc(1000 * sizeof(long));
+  long* x = (long*)malloc(1000 * sizeof(long));
   long nsamples = randsubseq(10000, 1000, 0.05, x);
   mu_assert("error, nsamples < 0", nsamples >= 0);
   mu_assert("error, x[0] outside",   x[0] >= 0 && x[0] < 10000);
@@ -113,7 +113,7 @@ static char * test_quickSort() {
 
 static char * test_quickSort1000() {
   int N = 1000;
-  long* a = malloc(N*sizeof(long));
+  long* a = (long*)malloc(N*sizeof(long));
   for (int i = 0; i < N; i++) {
     a[i] = (long)(2000*sin(i*17));
   }
@@ -147,8 +147,8 @@ static char * test_quickSortD() {
 
 static char * test_hilbert() {
   int N = 4;
-  int* rows = malloc(N * sizeof(int));
-  int* cols = malloc(N * sizeof(int));
+  int* rows = (int*)malloc(N * sizeof(int));
+  int* cols = (int*)malloc(N * sizeof(int));
   int nhilbert = 131072;
   long h;
 
@@ -164,9 +164,9 @@ static char * test_hilbert() {
 
 static char * test_sort_sbm() {
   struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
-  double* x  = malloc(A->ncol * sizeof(double));
-  double* y  = malloc(A->nrow * sizeof(double));
-  double* y2 = malloc(A->nrow * sizeof(double));
+  double* x  = (double*)malloc(A->ncol * sizeof(double));
+  double* y  = (double*)malloc(A->nrow * sizeof(double));
+  double* y2 = (double*)malloc(A->nrow * sizeof(double));
   for (int i = 0; i < A->ncol; i++) {
     x[i] = sin(i*19 + 0.4) + cos(i*i*3);
   }
@@ -197,9 +197,9 @@ static char * test_blocked_sbm() {
   mu_assert("error, B->start_row[0] != 100", B->start_row[0] == 0);
   mu_assert("error, B->start_row[1] != 100", B->start_row[1] == 8);
   mu_assert("error, B->start_row[13] != 100", B->start_row[13] == 100);
-  double* x  = malloc(B->ncol * sizeof(double));
-  double* y  = malloc(B->nrow * sizeof(double));
-  double* y2 = malloc(B->nrow * sizeof(double));
+  double* x  = (double*)malloc(B->ncol * sizeof(double));
+  double* y  = (double*)malloc(B->nrow * sizeof(double));
+  double* y2 = (double*)malloc(B->nrow * sizeof(double));
   for (int i = 0; i < A->ncol; i++) {
     x[i] = sin(i*17 + 0.2);
   }
@@ -229,9 +229,9 @@ static char * test_row_xy2d() {
 static char * test_sort_bsbm() {
   struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
   struct BlockedSBM *B = new_bsbm(A, 8);
-  double* x  = malloc(B->ncol * sizeof(double));
-  double* y  = malloc(B->nrow * sizeof(double));
-  double* y2 = malloc(B->nrow * sizeof(double));
+  double* x  = (double*)malloc(B->ncol * sizeof(double));
+  double* y  = (double*)malloc(B->nrow * sizeof(double));
+  double* y2 = (double*)malloc(B->nrow * sizeof(double));
   for (int i = 0; i < B->ncol; i++) {
     x[i] = sin(i*19 + 0.4) + cos(i*i*3);
   }
@@ -259,13 +259,13 @@ static char * test_sort_bsbm() {
 
 //// tests for SparseDoubleMatrix
 struct SparseDoubleMatrix* make_sdm() {
-  struct SparseDoubleMatrix *A = malloc(sizeof(struct SparseDoubleMatrix));
+  struct SparseDoubleMatrix *A = (struct SparseDoubleMatrix*)malloc(sizeof(struct SparseDoubleMatrix));
   A->nrow = 6;
   A->ncol = 4;
   A->nnz  = 11;
-  int *rows = malloc(A->nnz * sizeof(int));
-  int *cols = malloc(A->nnz * sizeof(int));
-  double *vals = malloc(A->nnz * sizeof(double));
+  int *rows = (int*)malloc(A->nnz * sizeof(int));
+  int *cols = (int*)malloc(A->nnz * sizeof(int));
+  double *vals = (double*)malloc(A->nnz * sizeof(double));
   memcpy(rows, (int []){1, 1, 3, 4, 1, 4, 5, 0, 1, 2, 4}, A->nnz * sizeof(int));
   memcpy(cols, (int []){0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3}, A->nnz * sizeof(int));
   memcpy(vals, (double []){0.65, 0.84, 0.54, 0.59, 0.51, 0.27, 0.23, 0.94, 0.66, 0.31, 0.92}, A->nnz * sizeof(double));
@@ -278,7 +278,7 @@ struct SparseDoubleMatrix* make_sdm() {
 static char * test_A_mul_B_sdm() {
   struct SparseDoubleMatrix *A = make_sdm();
   double x[] = {0.5, -0.7, 1.9, 2.3};
-  double* y = malloc(A->nrow * sizeof(double));
+  double* y = (double*)malloc(A->nrow * sizeof(double));
   double yt[] = {2.162, 2.224, 0.713, -0.378, 2.216, 0.437};
   // multiplication
   sdm_A_mul_B(y, A, x);
@@ -324,10 +324,10 @@ static char * test_blocked_sdm() {
   mu_assert("error, B->start_row[0] != 100", B->start_row[0] == 0);
   mu_assert("error, B->start_row[1] != 100", B->start_row[1] == 8);
   mu_assert("error, B->start_row[13] != 100", B->start_row[13] == 100);
-  double* x  = malloc(B->ncol * sizeof(double));
-  double* y  = malloc(B->nrow * sizeof(double));
-  double* y2 = malloc(B->nrow * sizeof(double));
-  double* y3 = malloc(B->nrow * sizeof(double));
+  double* x  = (double*)malloc(B->ncol * sizeof(double));
+  double* y  = (double*)malloc(B->nrow * sizeof(double));
+  double* y2 = (double*)malloc(B->nrow * sizeof(double));
+  double* y3 = (double*)malloc(B->nrow * sizeof(double));
   for (int i = 0; i < A->ncol; i++) {
     x[i] = sin(i*17 + 0.2);
   }
@@ -361,8 +361,8 @@ static char * test_cg() {
   struct BlockedSBM *Bt = new_bsbm(A, 8);
 
   int F = B->ncol;
-  double* x  = malloc(F * sizeof(double));
-  double* b  = malloc(F * sizeof(double));
+  double* x  = (double*)malloc(F * sizeof(double));
+  double* b  = (double*)malloc(F * sizeof(double));
 
   for (int i = 0; i < F; i++) {
     b[i] = sin(i*19 + 0.4) + cos(i*i*3);
@@ -374,8 +374,8 @@ static char * test_cg() {
 
   // verifying result:
   struct SparseBinaryMatrix *X = read_sbm("data/sbm-100-50.data");
-  double* tmp  = malloc(X->nrow * sizeof(double));
-  double* tmp2 = malloc(X->ncol * sizeof(double));
+  double* tmp  = (double*)malloc(X->nrow * sizeof(double));
+  double* tmp2 = (double*)malloc(X->ncol * sizeof(double));
   A_mul_B(tmp, X, x);
   At_mul_B(tmp2, X, tmp);
   for (int i = 0; i < B->ncol; i++) {

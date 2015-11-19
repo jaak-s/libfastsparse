@@ -59,9 +59,9 @@ int main(int argc, char **argv) {
   printf("Size of A is %d x %d.\n", A->nrow, A->ncol);
   printf("Number of repeats = %d\n", nrepeats);
 
-  double* y  = malloc(A->nrow * sizeof(double));
-  double* y2 = malloc(A->nrow * sizeof(double));
-  double* x  = malloc(A->ncol * sizeof(double));
+  double* y  = (double*)malloc(A->nrow * sizeof(double));
+  double* y2 = (double*)malloc(A->nrow * sizeof(double));
+  double* x  = (double*)malloc(A->ncol * sizeof(double));
 
   for (int i = 0; i < A->ncol; i++) {
     x[i] = sin(7.0*i + 0.3);
