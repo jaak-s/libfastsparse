@@ -109,8 +109,8 @@ struct SparseBinaryMatrix* read_sbm(const char *filename) {
     exit(1);
   }
   // reading data
-  int* rows = malloc(nnz * sizeof(int));
-  int* cols = malloc(nnz * sizeof(int));
+  int* rows = (int*)malloc(nnz * sizeof(int));
+  int* cols = (int*)malloc(nnz * sizeof(int));
   result1 = fread(rows, sizeof(int), nnz, fh);
   result2 = fread(cols, sizeof(int), nnz, fh);
   if (result1 != nnz || result2 != nnz) {
@@ -135,7 +135,7 @@ void sort_sbm(struct SparseBinaryMatrix *A) {
   int maxrc = A->nrow > A->ncol ? A->nrow : A->ncol;
   int n = ceilPower2(maxrc);
 
-  long* h = malloc(A->nnz * sizeof(long));
+  long* h = (long*)malloc(A->nnz * sizeof(long));
   for (long j = 0; j < A->nnz; j++) {
     h[j] = xy2d(n, rows[j], cols[j]);
   }
@@ -160,33 +160,33 @@ struct BlockedSBM {
 
 /** constructor for blocked rows */
 struct BlockedSBM* new_bsbm(struct SparseBinaryMatrix* A, int block_size) {
-  struct BlockedSBM *B = malloc(sizeof(struct BlockedSBM));
+  struct BlockedSBM *B = (struct BlockedSBM*)malloc(sizeof(struct BlockedSBM));
   B->nrow = A->nrow;
   B->ncol = A->ncol;
   B->nblocks = (int)ceil(A->nrow / (double)block_size);
-  B->nnz       = malloc(B->nblocks * sizeof(int));
+  B->nnz     = (int*)malloc(B->nblocks * sizeof(int));
 
   // array of starting rows, including the last
-  B->start_row = malloc((B->nblocks + 1) * sizeof(int));
+  B->start_row = (int*)malloc((B->nblocks + 1) * sizeof(int));
   for (int i = 0; i < B->nblocks; i++) {
     B->start_row[i] = i * block_size;
     B->nnz[i] = 0;
   }
   B->start_row[B->nblocks] = B->nrow;
   
-  B->rows = malloc(B->nblocks * sizeof(int*));
-  B->cols = malloc(B->nblocks * sizeof(int*));
+  B->rows = (int**)malloc(B->nblocks * sizeof(int*));
+  B->cols = (int**)malloc(B->nblocks * sizeof(int*));
 
   // counting nnz in each block
   for (long j = 0; j < A->nnz; j++) {
     int block = A->rows[j] / block_size;
     B->nnz[block]++;
   }
-  int* bcounts = malloc(B->nblocks * sizeof(int));
+  int* bcounts = (int*)malloc(B->nblocks * sizeof(int));
   for (int i = 0; i < B->nblocks; i++) {
     bcounts[i] = 0;
-    B->rows[i] = malloc(B->nnz[i] * sizeof(int));
-    B->cols[i] = malloc(B->nnz[i] * sizeof(int));
+    B->rows[i] = (int*)malloc(B->nnz[i] * sizeof(int));
+    B->cols[i] = (int*)malloc(B->nnz[i] * sizeof(int));
   }
 
   for (long j = 0; j < A->nnz; j++) {
@@ -208,7 +208,7 @@ void sort_bsbm(struct BlockedSBM *B) {
     int n = ceilPower2(B->start_row[block+1] - B->start_row[block]);
 
     // convert to hilbert, sort, convert back
-    long* h = malloc(nnz * sizeof(long));
+    long* h = (long*)malloc(nnz * sizeof(long));
     for (long j = 0; j < nnz; j++) {
       h[j] = row_xy2d(n, rows[j] - start_row, cols[j]);
     }
@@ -228,7 +228,7 @@ void sort_bsbm_byrow(struct BlockedSBM *B) {
     int* cols = B->cols[block];
     int nnz = B->nnz[block];
 
-    long* h = malloc(nnz * sizeof(long));
+    long* h = (long*)malloc(nnz * sizeof(long));
     for (long j = 0; j < nnz; j++) {
       h[j] = rows[j] * B->ncol + cols[j];
     }
