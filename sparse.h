@@ -6,6 +6,7 @@
 #include <string.h>
 #include "hilbert.h"
 #include "quickSort.h"
+#include "utils.h"
 
 struct SparseBinaryMatrix
 {
@@ -17,17 +18,13 @@ struct SparseBinaryMatrix
 };
 
 /** constructor, computes nrow and ncol from data */
-struct SparseBinaryMatrix* new_sbm(long nnz, int* rows, int* cols) {
+struct SparseBinaryMatrix* new_sbm(long nrow, long ncol, long nnz, int* rows, int* cols) {
   struct SparseBinaryMatrix *A = (struct SparseBinaryMatrix*)malloc(sizeof(struct SparseBinaryMatrix));
   A->nnz  = nnz;
   A->rows = rows;
   A->cols = cols;
-  A->nrow = 0;
-  A->ncol = 0;
-  for (int i = 0; i < nnz; i++) {
-    if (rows[i] >= A->nrow) A->nrow = rows[i] + 1;
-    if (cols[i] >= A->ncol) A->ncol = cols[i] + 1;
-  }
+  A->nrow = nrow;
+  A->ncol = ncol;
   return A;
 }
 
@@ -102,12 +99,9 @@ struct SparseBinaryMatrix* read_sbm(const char *filename) {
     fprintf( stderr, "File error: %s\n", filename );
     exit(1);
   }
-  long nnz = 0;
-  result1 = fread(&nnz, sizeof(long), 1, fh);
-  if (result1 != 1) {
-    fprintf( stderr, "File reading error for nnz: %s\n", filename );
-    exit(1);
-  }
+  long nrow = read_long(fh);
+  long ncol = read_long(fh);
+  long nnz  = read_long(fh);
   // reading data
   int* rows = (int*)malloc(nnz * sizeof(int));
   int* cols = (int*)malloc(nnz * sizeof(int));
@@ -124,7 +118,7 @@ struct SparseBinaryMatrix* read_sbm(const char *filename) {
     cols[i]--;
   }
 
-  return new_sbm(nnz, rows, cols);
+  return new_sbm(nrow, ncol, nnz, rows, cols);
 } 
 
 /** sorts SBM according to Hilbert curve */

@@ -6,6 +6,7 @@
 #include <string.h>
 #include "hilbert.h"
 #include "quickSortD.h"
+#include "utils.h"
 
 struct SparseDoubleMatrix
 {
@@ -58,16 +59,6 @@ void sdm_At_mul_B(double* y, struct SparseDoubleMatrix *A, double* x) {
   for (long j = 0; j < A->nnz; j++) {
     y[cols[j]] += x[rows[j]] * vals[j];
   }
-}
-
-long read_long(FILE* fh) {
-  long value;
-  size_t result1 = fread(&value, sizeof(long), 1, fh);
-  if (result1 != 1) {
-    fprintf( stderr, "File reading error for a long. File is corrupt.\n");
-    exit(1);
-  }
-  return value;
 }
 
 struct SparseDoubleMatrix* read_sdm(const char *filename) {
