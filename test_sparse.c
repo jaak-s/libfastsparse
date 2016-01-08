@@ -207,6 +207,21 @@ static char * test_blocked_sbm() {
   bsbm_A_mul_B(y2, B, x);
   double d = dist(y2, y, A->nrow);
   mu_assert("error, dist(y2,y) > 1e-6", d < 1e-6); 
+
+  // test 2 col Y = B * X
+  double* X  = (double*)malloc(B->ncol * 2 * sizeof(double));
+  double* Y  = (double*)malloc(B->nrow * 2 * sizeof(double));
+  for (int i = 0; i < A->ncol; i++) {
+    X[i*2]   = sin(i*17 + 0.2);
+    X[i*2+1] = sin(i*23 + 0.7);
+    x[i]     = X[i*2+1];
+  }
+  A_mul_B(y2, A, x);
+  bsbm_A_mul_B2(Y, B, X);
+  for (int row = 0; row < A->nrow; row++) {
+    mu_assert("error, |y[row] - Y[row,1]| > 1e-6", abs(y[row] - Y[row*2]) < 1e-6);
+    mu_assert("error, |y2[row] - Y[row,2]| > 1e-6", abs(y2[row] - Y[row*2+1]) < 1e-6);
+  }
   return 0;
 }
 

@@ -63,8 +63,13 @@ int main(int argc, char **argv) {
   double* y2 = (double*)malloc(A->nrow * sizeof(double));
   double* x  = (double*)malloc(A->ncol * sizeof(double));
 
+  double* Y  = (double*)malloc(2 * A->nrow * sizeof(double));
+  double* X  = (double*)malloc(2 * A->ncol * sizeof(double));
+
   for (int i = 0; i < A->ncol; i++) {
     x[i] = sin(7.0*i + 0.3);
+    X[i*2] = sin(7.0*i + 0.3);
+    X[i*2+1] = sin(11*i - 0.2);
   }
 
   double wall_start, cpu_start;
@@ -124,6 +129,17 @@ int main(int argc, char **argv) {
   timing(&wall_stop, &cpu_stop);
   printf("[block]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
 
+  ////// Blocked SBM 2x //////
+  printf("Block size = %d\n", block_size);
+  bsbm_A_mul_B2(Y, B, X);
+  timing(&wall_start, &cpu_start);
+  for (int i = 0; i < nrepeats; i++) {
+    bsbm_A_mul_B2(Y, B, X);
+  }
+  timing(&wall_stop, &cpu_stop);
+  printf("[block]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+  
+  ////// Sort each block ///////
   sort_bsbm(B);
   timing(&wall_start, &cpu_start);
   for (int i = 0; i < nrepeats; i++) {
@@ -132,6 +148,7 @@ int main(int argc, char **argv) {
   timing(&wall_stop, &cpu_stop);
   printf("[sort+block]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
 
+  ////// Sort by row ///////
   sort_bsbm_byrow(B);
   timing(&wall_start, &cpu_start);
   for (int i = 0; i < nrepeats; i++) {

@@ -253,4 +253,24 @@ void bsbm_A_mul_B(double* y, struct BlockedSBM *B, double* x) {
   }
 }
 
+/** Y = B * X, where X has 2 cols, Y and X are row-ordered */
+void bsbm_A_mul_B2(double* y, struct BlockedSBM *B, double* x) {
+#pragma omp parallel for schedule(dynamic, 1)
+  for (int block = 0; block < B->nblocks; block++) {
+    int* rows = B->rows[block];
+    int* cols = B->cols[block];
+    int nnz = B->nnz[block];
+
+    // zeroing Y:
+    memset(y + 2 * B->start_row[block], 0, 2 * (B->start_row[block+1] - B->start_row[block]) * sizeof(double));
+
+    for (int j = 0; j < nnz; j++) {
+      int row = rows[j] * 2;
+      int col = cols[j] * 2;
+      y[row]   += x[col];
+      y[row+1] += x[col+1];
+    }
+  }
+}
+
 #endif /* SPARSE_H */
