@@ -267,10 +267,52 @@ void bsbm_A_mul_B2(double* y, struct BlockedSBM *B, double* x) {
     for (int j = 0; j < nnz; j++) {
       int row = rows[j] * 2;
       int col = cols[j] * 2;
+      y[row++] += x[col++];
       y[row]   += x[col];
-      y[row+1] += x[col+1];
     }
   }
 }
 
+/** Y = B * X, where X has 4 cols, Y and X are row-ordered */
+void bsbm_A_mul_B4(double* y, struct BlockedSBM *B, double* x) {
+#pragma omp parallel for schedule(dynamic, 1)
+  for (int block = 0; block < B->nblocks; block++) {
+    int* rows = B->rows[block];
+    int* cols = B->cols[block];
+    int nnz = B->nnz[block];
+
+    // zeroing Y:
+    memset(y + 4 * B->start_row[block], 0, 4 * (B->start_row[block+1] - B->start_row[block]) * sizeof(double));
+
+    for (int j = 0; j < nnz; j++) {
+      int row = rows[j] * 4;
+      int col = cols[j] * 4;
+      y[row++] += x[col++];
+      y[row++] += x[col++];
+      y[row++] += x[col++];
+      y[row]   += x[col];
+    }
+  }
+}
+
+/** Y = B * X, where X has ncol columns, Y and X are row-ordered */
+void bsbm_A_mul_Bn(double* y, struct BlockedSBM *B, double* x, int ncol) {
+#pragma omp parallel for schedule(dynamic, 1)
+  for (int block = 0; block < B->nblocks; block++) {
+    int* rows = B->rows[block];
+    int* cols = B->cols[block];
+    int nnz = B->nnz[block];
+
+    // zeroing Y:
+    memset(y + ncol * B->start_row[block], 0, ncol * (B->start_row[block+1] - B->start_row[block]) * sizeof(double));
+
+    for (int j = 0; j < nnz; j++) {
+      int row = rows[j] * ncol;
+      int col = cols[j] * ncol;
+      for (int k = 0; k < ncol; k++) {
+         y[row++] += x[col++];
+      }
+    }
+  }
+}
 #endif /* SPARSE_H */
