@@ -66,10 +66,22 @@ int main(int argc, char **argv) {
   double* Y  = (double*)malloc(2 * A->nrow * sizeof(double));
   double* X  = (double*)malloc(2 * A->ncol * sizeof(double));
 
+  double* Y4  = (double*)malloc(4 * A->nrow * sizeof(double));
+  double* X4  = (double*)malloc(4 * A->ncol * sizeof(double));
+
+  //double* Y8  = (double*)malloc(8 * A->nrow * sizeof(double));
+  //double* X8  = (double*)malloc(8 * A->ncol * sizeof(double));
+
   for (int i = 0; i < A->ncol; i++) {
     x[i] = sin(7.0*i + 0.3);
     X[i*2] = sin(7.0*i + 0.3);
     X[i*2+1] = sin(11*i - 0.2);
+    for (int k = 0; k < 4; k++) {
+      X4[i*4+k] = sin(7*i + 17*k + 0.3);
+    }
+    //for (int k = 0; k < 8; k++) {
+    //  X8[i*8+k] = sin(7*i + 17*k + 0.3);
+    //}
   }
 
   double wall_start, cpu_start;
@@ -130,15 +142,34 @@ int main(int argc, char **argv) {
   printf("[block]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
 
   ////// Blocked SBM 2x //////
-  printf("Block size = %d\n", block_size);
   bsbm_A_mul_B2(Y, B, X);
   timing(&wall_start, &cpu_start);
   for (int i = 0; i < nrepeats; i++) {
     bsbm_A_mul_B2(Y, B, X);
   }
   timing(&wall_stop, &cpu_stop);
-  printf("[block]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+  printf("[2xblock]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
   
+  ////// Blocked SBM 4x //////
+  bsbm_A_mul_B4(Y4, B, X4);
+  timing(&wall_start, &cpu_start);
+  for (int i = 0; i < nrepeats; i++) {
+    bsbm_A_mul_B4(Y4, B, X4);
+  }
+  timing(&wall_stop, &cpu_stop);
+  printf("[4xblock]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+
+  ////// Blocked SBM 8x //////
+  /*
+  bsbm_A_mul_Bn(Y8, B, X8, 8);
+  timing(&wall_start, &cpu_start);
+  for (int i = 0; i < nrepeats; i++) {
+    bsbm_A_mul_Bn(Y8, B, X8, 8);
+  }
+  timing(&wall_stop, &cpu_stop);
+  printf("[8xblock]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+  */
+
   ////// Sort each block ///////
   sort_bsbm(B);
   timing(&wall_start, &cpu_start);
