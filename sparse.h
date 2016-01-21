@@ -107,7 +107,7 @@ struct SparseBinaryMatrix* read_sbm(const char *filename) {
   int* cols = (int*)malloc(nnz * sizeof(int));
   result1 = fread(rows, sizeof(int), nnz, fh);
   result2 = fread(cols, sizeof(int), nnz, fh);
-  if (result1 != nnz || result2 != nnz) {
+  if ((int)result1 != nnz || (int)result2 != nnz) {
     fprintf( stderr, "File read error: %s\n", filename );
     exit(1);
   }
