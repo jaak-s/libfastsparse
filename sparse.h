@@ -130,10 +130,12 @@ void sort_sbm(struct SparseBinaryMatrix *A) {
   int n = ceilPower2(maxrc);
 
   long* h = (long*)malloc(A->nnz * sizeof(long));
+#pragma omp parallel for schedule(static, 1)
   for (long j = 0; j < A->nnz; j++) {
     h[j] = xy2d(n, rows[j], cols[j]);
   }
   quickSort(h, 0, A->nnz - 1);
+#pragma omp parallel for schedule(static, 1)
   for (long j = 0; j < A->nnz; j++) {
     d2xy(n, h[j], &rows[j], &cols[j]);
   }
