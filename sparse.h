@@ -28,6 +28,16 @@ struct SparseBinaryMatrix* new_sbm(long nrow, long ncol, long nnz, int* rows, in
   return A;
 }
 
+struct SparseBinaryMatrix* new_transpose(struct SparseBinaryMatrix *A) {
+  struct SparseBinaryMatrix *B = (struct SparseBinaryMatrix*)malloc(sizeof(struct SparseBinaryMatrix));
+  B->nnz  = A->nnz;
+  B->rows = A->cols;
+  B->cols = A->rows;
+  B->nrow = A->ncol;
+  B->ncol = A->nrow;
+  return B;
+}
+
 void transpose(struct SparseBinaryMatrix *A) {
   int* tmp = A->rows;
   A->rows = A->cols;
@@ -38,7 +48,7 @@ void transpose(struct SparseBinaryMatrix *A) {
 }
 
 /** y = A * x */
-void A_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
+inline void A_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
   int* rows = A->rows;
   int* cols = A->cols;
   memset(y, 0, A->nrow * sizeof(double));
@@ -48,7 +58,7 @@ void A_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
 }
 
 /** y = A' * x */
-void At_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
+inline void At_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
   int* rows = A->rows;
   int* cols = A->cols;
   memset(y, 0, A->ncol * sizeof(double));
@@ -237,7 +247,7 @@ void sort_bsbm_byrow(struct BlockedSBM *B) {
 }
 
 /** y = B * x */
-void bsbm_A_mul_B(double* y, struct BlockedSBM *B, double* x) {
+inline void bsbm_A_mul_B(double* y, struct BlockedSBM *B, double* x) {
 #pragma omp parallel for schedule(dynamic, 1)
   for (int block = 0; block < B->nblocks; block++) {
     int* rows = B->rows[block];
@@ -254,7 +264,7 @@ void bsbm_A_mul_B(double* y, struct BlockedSBM *B, double* x) {
 }
 
 /** Y = B * X, where X has 2 cols, Y and X are row-ordered */
-void bsbm_A_mul_B2(double* y, struct BlockedSBM *B, double* x) {
+inline void bsbm_A_mul_B2(double* y, struct BlockedSBM *B, double* x) {
 #pragma omp parallel for schedule(dynamic, 1)
   for (int block = 0; block < B->nblocks; block++) {
     int* rows = B->rows[block];
@@ -274,7 +284,7 @@ void bsbm_A_mul_B2(double* y, struct BlockedSBM *B, double* x) {
 }
 
 /** Y = B * X, where X has 4 cols, Y and X are row-ordered */
-void bsbm_A_mul_B4(double* y, struct BlockedSBM *B, double* x) {
+inline void bsbm_A_mul_B4(double* y, struct BlockedSBM *B, double* x) {
 #pragma omp parallel for schedule(dynamic, 1)
   for (int block = 0; block < B->nblocks; block++) {
     int* rows = B->rows[block];
@@ -296,7 +306,7 @@ void bsbm_A_mul_B4(double* y, struct BlockedSBM *B, double* x) {
 }
 
 /** Y = B * X, where X has ncol columns, Y and X are row-ordered */
-void bsbm_A_mul_Bn(double* y, struct BlockedSBM *B, double* x, int ncol) {
+inline void bsbm_A_mul_Bn(double* y, struct BlockedSBM *B, double* x, int ncol) {
 #pragma omp parallel for schedule(dynamic, 1)
   for (int block = 0; block < B->nblocks; block++) {
     int* rows = B->rows[block];

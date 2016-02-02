@@ -49,7 +49,8 @@ int main(int argc, char **argv) {
       t = 1;
     }
   }
-  int nrepeats = 100;
+  int nrepeats = 10;
+  int cgrepeats = 100;
 
   printf("Benchmarking A*x with '%s'.\n", filename);
   struct SparseBinaryMatrix* A = read_sbm(filename);
@@ -58,6 +59,7 @@ int main(int argc, char **argv) {
   }
   printf("Size of A is %d x %d.\n", A->nrow, A->ncol);
   printf("Number of repeats = %d\n", nrepeats);
+  printf("Number of CG repeats = %d\n", cgrepeats);
 
   double* y  = (double*)malloc(A->nrow * sizeof(double));
   double* y2 = (double*)malloc(A->nrow * sizeof(double));
@@ -133,6 +135,8 @@ int main(int argc, char **argv) {
   ////// Blocked SBM //////
   printf("Block size = %d\n", block_size);
   struct BlockedSBM* B = new_bsbm(A, block_size);
+  struct SparseBinaryMatrix* At = new_transpose(A);
+  struct BlockedSBM* Bt = new_bsbm(At, block_size);
   bsbm_A_mul_B(y2, B, x);
   timing(&wall_start, &cpu_start);
   for (int i = 0; i < nrepeats; i++) {
@@ -150,6 +154,34 @@ int main(int argc, char **argv) {
   timing(&wall_stop, &cpu_stop);
   printf("[2xblock]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
   
+  ////// Blocked SBM 2x* //////
+  bsbm_A_mul_B2(Y, B, X);
+  timing(&wall_start, &cpu_start);
+  for (int i = 0; i < nrepeats; i++) {
+    bsbm_A_mul_Bn(Y, B, X, 2);
+  }
+  timing(&wall_stop, &cpu_stop);
+  printf("[2xblock*]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+
+  /////// CG with x //////
+  timing(&wall_start, &cpu_start);
+  for (int i = 0; i < cgrepeats; i++) {
+    bsbm_A_mul_B(y, B,  x);
+    bsbm_A_mul_B(x, Bt, y);
+  }
+  timing(&wall_stop, &cpu_stop);
+  printf("[cg]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+
+  /////// CG with X //////
+  timing(&wall_start, &cpu_start);
+  for (int i = 0; i < cgrepeats; i++) {
+    bsbm_A_mul_B2(Y, B,  X);
+    bsbm_A_mul_B2(X, Bt, Y);
+  }
+  timing(&wall_stop, &cpu_stop);
+  printf("[cg2]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+
+
   ////// Blocked SBM 4x //////
   bsbm_A_mul_B4(Y4, B, X4);
   timing(&wall_start, &cpu_start);
