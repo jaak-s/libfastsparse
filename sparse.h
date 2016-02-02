@@ -117,7 +117,7 @@ struct SparseBinaryMatrix* read_sbm(const char *filename) {
   int* cols = (int*)malloc(nnz * sizeof(int));
   result1 = fread(rows, sizeof(int), nnz, fh);
   result2 = fread(cols, sizeof(int), nnz, fh);
-  if (result1 != nnz || result2 != nnz) {
+  if ((int)result1 != nnz || (int)result2 != nnz) {
     fprintf( stderr, "File read error: %s\n", filename );
     exit(1);
   }
@@ -140,10 +140,12 @@ void sort_sbm(struct SparseBinaryMatrix *A) {
   int n = ceilPower2(maxrc);
 
   long* h = (long*)malloc(A->nnz * sizeof(long));
+#pragma omp parallel for schedule(static, 1)
   for (long j = 0; j < A->nnz; j++) {
     h[j] = xy2d(n, rows[j], cols[j]);
   }
   quickSort(h, 0, A->nnz - 1);
+#pragma omp parallel for schedule(static, 1)
   for (long j = 0; j < A->nnz; j++) {
     d2xy(n, h[j], &rows[j], &cols[j]);
   }
