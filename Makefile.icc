@@ -1,0 +1,13 @@
+CC=icc
+CFLAGS=-std=gnu99 -Wall -DNDEBUG -O3 -xHost -openmp -lm -fno-alias -lirng
+
+all: test bench
+
+test:
+	$(CC) test_sparse.c $(CFLAGS) -o test_sparse
+
+bench:
+	$(CC) bench_a_mul_b.c $(CFLAGS) -o bench_a_mul_b
+
+clean:
+	rm -f test_sparse bench_a_mul_b

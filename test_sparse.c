@@ -298,7 +298,7 @@ static char * test_A_mul_B_sdm() {
   // multiplication
   sdm_A_mul_B(y, A, x);
   for (int i = 0; i < A->nrow; i++) {
-    mu_assert("error, sdm_A_mul_B is wrong", y[i] == yt[i]);
+    mu_assert("error, sdm_A_mul_B is wrong", abs(y[i] - yt[i]) < 1e-6);
   }
   return 0;
 }
