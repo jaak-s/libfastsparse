@@ -1,13 +1,18 @@
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <unistd.h>
+#include <omp.h>
 #include "sparse.h"
 #include "timing.h"
+#include "cg.h"
 
 void usage() {
   printf("Usage:\n");
-  printf("  bench_a_mul_c <matrix_file> [block_size] [-t]\n");
+  printf("  bench_a_mul_c -f <matrix_file> [-b block_size] [-t] [-c]\n");
   printf("  -t  transpose matrix\n");
+  printf("  -c  run conjugate gradient\n");
 }
 
 void extrema(int* x, long n, int* min, int* max) {
@@ -21,7 +26,7 @@ void extrema(int* x, long n, int* min, int* max) {
 }
 
 /** returns -1 if A is hilbert sorted
- *  otherwise idx of the first non-increasing elemetn */
+ *  otherwise idx of the first non-increasing element */
 long check_if_sorted(struct SparseBinaryMatrix *A) {
   int n = ceilPower2(A->nrow > A->ncol ? A->nrow : A->ncol);
   long h = xy2d(n, A->rows[0], A->cols[0]);
@@ -33,29 +38,74 @@ long check_if_sorted(struct SparseBinaryMatrix *A) {
   return -1;
 }
 
-int main(int argc, char **argv) {
-  if (argc <= 1) {
-    printf("Need matrix file name.\n");
-    usage();
-    exit(1);
-  }
-  char* filename = argv[1];
-  int block_size = 1024;
-  int t = 0;
-  if (argc >= 3) {
-    block_size = atoi(argv[2]);
-  }
-  if (argc >= 4) {
-    if (strcmp("-t", argv[3]) == 0) {
-      t = 1;
+void randn(double* x, int n) {
+  struct drand48_data drand_buf;
+  int seed;
+#pragma omp parallel private(seed, drand_buf)
+  {
+    seed = 1202107158 + omp_get_thread_num() * 1999;
+    srand48_r (seed, &drand_buf);
+
+#pragma omp for schedule(static)
+    for (int i = 0; i < n; i += 2) {
+      double x1, x2, w;
+      do {
+        drand48_r(&drand_buf, &x1);
+        drand48_r(&drand_buf, &x2);
+        x1 = 2.0 * x1 - 1.0;
+        x2 = 2.0 * x2 - 1.0;
+        w = x1 * x1 + x2 * x2;
+      } while ( w >= 1.0 );
+
+      w = sqrt( (-2.0 * log( w ) ) / w );
+      x[i] = x1 * w;
+      if (i + 1 < n) {
+        x[i+1] = x2 * w;
+      }
     }
   }
+}
+
+int main(int argc, char **argv) {
+  int cgflag = 0;
+  int tflag  = 0;
+  char* filename = NULL;
+  int block_size = 1024;
+  int c;
+
+  opterr = 0;
+
+  while ((c = getopt(argc, argv, "b:cf:t")) != -1)
+    switch (c) {
+      case 'b': block_size = atoi(optarg); break;
+      case 'c': cgflag = 1; break;
+      case 'f': filename = optarg; break;
+      case 't': tflag = 1; break;
+      case '?':
+        if (optopt == 'f')
+          fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+        else if (isprint(optopt))
+          fprintf(stderr, "Unknown option '-%c'.\n", optopt);
+        else
+          fprintf(stderr, "Unknown option character '\\x%x.\n", optopt);
+        usage();
+        return 1;
+      default:
+        usage();
+        return 2;
+    }
   int nrepeats = 10;
   int cgrepeats = 100;
 
+  if (filename == NULL) {
+    fprintf(stderr, "Input matrix file missing.\n");
+    usage();
+    return 3;
+  }
+
   printf("Benchmarking A*x with '%s'.\n", filename);
   struct SparseBinaryMatrix* A = read_sbm(filename);
-  if (t) {
+  if (tflag) {
     transpose(A);
   }
   printf("Size of A is %d x %d.\n", A->nrow, A->ncol);
@@ -182,6 +232,36 @@ int main(int argc, char **argv) {
   timing(&wall_stop, &cpu_stop);
   printf("[cg2]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
 
+  /////// Running Macau BlockCG with 2 RHSs //////
+  if (cgflag) {
+    printf("[BlockCG2]\tGenerating RHSs data.\n");
+    double l = 15.0;
+    double lsqrt = sqrt(15.0);
+    double* N2 = (double*)malloc(2 * A->nrow * sizeof(double));
+    double* B2 = (double*)malloc(2 * A->ncol * sizeof(double));
+    double* E2 = (double*)malloc(2 * A->ncol * sizeof(double));
+
+    randn(N2, A->nrow * 2);
+    randn(E2, A->ncol * 2);
+    bsbm_A_mul_B2(B2, Bt, N2);
+
+    int nfeat2 = A->ncol * 2;
+    for (int i = 0; i < nfeat2; i++) {
+      B2[i] += lsqrt * E2[i];
+    }
+    printf("[BlockCG2]\tTwo RHSs generated.\n");
+
+    int numIter = 0;
+    timing(&wall_start, &cpu_start);
+    bsbm_cg2(E2, B, Bt, B2, l, 1e-6, &numIter);
+    timing(&wall_stop, &cpu_stop);
+    printf("[BlockCG2]\tWall: %.3f\tcpu: %.3f\n", wall_stop - wall_start, cpu_stop - cpu_start);
+    printf("[BlockCG2]\tniter: %d\n", numIter);
+
+    free(N2);
+    free(B2);
+    free(E2);
+  }
 
   ////// Blocked SBM 4x //////
   bsbm_A_mul_B4(Y4, B, X4);

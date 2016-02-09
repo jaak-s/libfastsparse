@@ -365,6 +365,44 @@ static char * test_dot_normsq() {
   mu_assert("pnormsq(y,4) != 65.8605", abs(pnormsq(y,4) - 65.8605) < 1e-8);
   mu_assert("pdot(x,y,4)  != 2.9486", abs(pdot(x, y, 4) - 2.9486) < 1e-8);
 
+  double normsq2[2];
+  pnormsq2(normsq2, x, 2);
+  mu_assert("pnormsq2(x,2)[0] not right", abs(normsq2[0] - 0.12*0.12 - 1.3*1.3) < 1e-8);
+  mu_assert("pnormsq2(x,2)[1] not right", abs(normsq2[1] - 0.82*0.82 - 0.5*0.5) < 1e-8);
+
+  double outer[3];
+  pouter2(outer, x, 2);
+  mu_assert("pouter(x,2)[0] not right", abs(outer[0] - 0.12*0.12 - 1.3*1.3) < 1e-8);
+  mu_assert("pouter(x,2)[1] not right", abs(outer[1] - 0.82*0.82 - 0.5*0.5) < 1e-8);
+  mu_assert("pouter(x,2)[2] not right", abs(outer[2] - (0.12*(-0.82) + 1.3*0.5)) < 1e-8);
+  return 0;
+}
+
+static char * test_pdot2() {
+  double x[] = {0.95, 0.9, 0.16, 0.46, 0.86, 0.29};
+  double y[] = {0.9695, 0.6678, 0.277, 0.1908, 1.108, 0.7632};
+  double ans[] = {1.91822, 0.910116, 1.32129}; 
+  double dot[3];
+
+  pdot2sym(dot, x, y, 3);
+  mu_assert("pdot2sym(x, y, 3)[0] not right", abs(dot[0] - ans[0]) < 1e-8);
+  mu_assert("pdot2sym(x, y, 3)[1] not right", abs(dot[1] - ans[1]) < 1e-8);
+  mu_assert("pdot2sym(x, y, 3)[2] not right", abs(dot[2] - ans[2]) < 1e-8);
+
+  return 0;
+}
+
+static char * test_solve2sym() {
+  double A[3]   = {0.59,  1.34,  0.86};
+  double RHS[4] = {-1.21, 1.91, -0.82, 0.03};
+  double ans[4] = {-64.0, 42.5, -22.051, 14.1745};
+  double X[4];
+
+  solve2sym(X, A, RHS);
+  mu_assert("solve2sym(X, A, RHS)[0] not right", abs(X[0] - ans[0]) < 1e-8);
+  mu_assert("solve2sym(X, A, RHS)[1] not right", abs(X[1] - ans[1]) < 1e-8);
+  mu_assert("solve2sym(X, A, RHS)[2] not right", abs(X[2] - ans[2]) < 1e-8);
+  mu_assert("solve2sym(X, A, RHS)[3] not right", abs(X[3] - ans[3]) < 1e-8);
   return 0;
 }
 
@@ -388,6 +426,9 @@ static char * test_cg() {
   bsbm_cg(x, B, Bt, b, lambda, 1e-6, &numIter);
 
   // verifying result:
+  mu_assert("x[0] != 0.0638578", abs(x[0] - 0.0638578) < 1e-4);
+  mu_assert("x[1] !=-0.0302702", abs(x[1] + 0.0302702) < 1e-4);
+
   struct SparseBinaryMatrix *X = read_sbm("data/sbm-100-50.data");
   double* tmp  = (double*)malloc(X->nrow * sizeof(double));
   double* tmp2 = (double*)malloc(X->ncol * sizeof(double));
@@ -397,9 +438,20 @@ static char * test_cg() {
     tmp2[i] += lambda * x[i];
   }
   double d = dist(tmp2, b, X->ncol);
-  mu_assert("x[0] != 0.0638578", abs(x[0] - 0.0638578) < 1e-4);
-  mu_assert("x[1] !=-0.0302702", abs(x[1] + 0.0302702) < 1e-4);
   mu_assert("resid < 1e-5", d < 1e-5);
+
+  // CG for 2 RHSs
+  double* x2 = (double*)malloc(F * 2 * sizeof(double));
+  double* b2 = (double*)malloc(F * 2 * sizeof(double));
+
+  for (int i = 0; i < F; i++) {
+    b2[2*i]   = sin(i*19 + 0.4) + cos(i*i*3);
+    b2[2*i+1] = cos(i*23 + 0.7) + sin(i*i*7);
+  }
+  bsbm_cg2(x2, B, Bt, b2, lambda, 1e-6, &numIter);
+
+  mu_assert("x2[0] != 0.0638578", abs(x2[0] - 0.0638578) < 1e-4);
+  mu_assert("x2[1] !=-0.0302702", abs(x2[2] + 0.0302702) < 1e-4);
   
   return 0;
 }
@@ -425,6 +477,8 @@ static char * all_tests() {
     mu_run_test(test_blocked_sdm);
     mu_run_test(test_row_xy2d);
     mu_run_test(test_dot_normsq);
+    mu_run_test(test_pdot2);
+    mu_run_test(test_solve2sym);
     mu_run_test(test_cg);
     return 0;
 }
