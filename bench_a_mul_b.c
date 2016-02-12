@@ -66,6 +66,14 @@ void randn(double* x, int n) {
   }
 }
 
+void execute_mul2(double* Y, struct BlockedSBM* B, struct BlockedSBM* Bt, double* X, int cgrepeats, int nthreads) {
+  omp_set_num_threads(nthreads);
+  for (int i = 0; i < cgrepeats; i++) {
+    bsbm_A_mul_B2(Y, B,  X);
+    bsbm_A_mul_B2(X, Bt, Y);
+  }
+}
+
 int main(int argc, char **argv) {
   int cgflag = 0;
   int tflag  = 0;
@@ -119,6 +127,9 @@ int main(int argc, char **argv) {
   double* Y  = (double*)malloc(2 * A->nrow * sizeof(double));
   double* X  = (double*)malloc(2 * A->ncol * sizeof(double));
 
+  double* Y2  = (double*)malloc(2 * A->nrow * sizeof(double));
+  double* X2  = (double*)malloc(2 * A->ncol * sizeof(double));
+
   double* Y4  = (double*)malloc(4 * A->nrow * sizeof(double));
   double* X4  = (double*)malloc(4 * A->ncol * sizeof(double));
 
@@ -126,9 +137,12 @@ int main(int argc, char **argv) {
   //double* X8  = (double*)malloc(8 * A->ncol * sizeof(double));
 
   for (int i = 0; i < A->ncol; i++) {
-    x[i] = sin(7.0*i + 0.3);
-    X[i*2] = sin(7.0*i + 0.3);
+    x[i]     = sin(7.0*i + 0.3);
+    X[i*2]   = sin(7.0*i + 0.3);
     X[i*2+1] = sin(11*i - 0.2);
+    X2[i*2]  = X[i*2];
+    X2[i*2+1] = X[i*2 + 1];
+
     for (int k = 0; k < 4; k++) {
       X4[i*4+k] = sin(7*i + 17*k + 0.3);
     }
@@ -232,6 +246,7 @@ int main(int argc, char **argv) {
   timing(&wall_stop, &cpu_stop);
   printf("[cg2]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
 
+
   /////// Running Macau BlockCG with 2 RHSs //////
   if (cgflag) {
     printf("[BlockCG2]\tGenerating RHSs data.\n");
@@ -300,4 +315,27 @@ int main(int argc, char **argv) {
   }
   timing(&wall_stop, &cpu_stop);
   printf("[rowsort+block]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+
+  ////// CG in 2 separate independent parallel blocks
+  int omp_total_threads;
+#pragma omp parallel
+  {
+#pragma omp single
+    omp_total_threads = omp_get_num_threads();
+  }
+  omp_set_nested(1);
+  omp_set_dynamic(0);
+  omp_set_num_threads(2);
+  timing(&wall_start, &cpu_start);
+#pragma omp parallel
+  {
+    if (omp_get_thread_num() % 2 == 0) {
+      execute_mul2(Y, B, Bt, X, cgrepeats, omp_total_threads / 2);
+    } else {
+      execute_mul2(Y2, B, Bt, X2, cgrepeats, omp_total_threads / 2);
+    }
+  }
+  timing(&wall_stop, &cpu_stop);
+  printf("[2x cg2]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+  omp_set_nested(0);
 }
