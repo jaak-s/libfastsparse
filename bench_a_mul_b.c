@@ -7,6 +7,7 @@
 #include "sparse.h"
 #include "timing.h"
 #include "cg.h"
+#include "csr.h"
 
 void usage() {
   printf("Usage:\n");

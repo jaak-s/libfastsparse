@@ -94,7 +94,7 @@ inline void parallel_bcsr_AA_mul_B(double* y, struct BinaryCSR *A, double* x, do
     double* ytmpi = ytmp + (ncol * ithread);
     memset(ytmpi, 0, A->ncol * sizeof(double));
 
-#pragma omp for schedule(dynamic, 32)
+#pragma omp for schedule(dynamic, 1024)
     for (int row = 0; row < nrow; row++) {
       double xv = 0;
       for (int i = row_ptr[row]; i < row_ptr[row + 1]; i++) {
