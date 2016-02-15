@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-std=gnu99 -Wall -DNDEBUG -Wall -O3 -fopenmp -lm -fstrict-aliasing
+CFLAGS=-std=gnu99 -Wall -DNDEBUG -Wall -O3 -march=native -fopenmp -lm -fstrict-aliasing
 
 all: test bench
 
