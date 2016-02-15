@@ -8,6 +8,7 @@ test:
 
 bench:
 	$(CC) bench_a_mul_b.c $(CFLAGS) -o bench_a_mul_b
+	$(CC) bench_csr.c $(CFLAGS) -o bench_csr
 
 clean:
 	rm -f test_sparse bench_a_mul_b
