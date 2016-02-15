@@ -8,6 +8,7 @@
 #include "dsparse.h"
 #include "linalg.h"
 #include "cg.h"
+#include "csr.h"
 
 int tests_run = 0;
 
@@ -51,6 +52,59 @@ static char * test_A_mul_B2() {
   A_mul_B(y, A, x);
   mu_assert("error, y[0]  != 1.70095",   abs(y[0] - 1.70095) < 1e-4);
   mu_assert("error, y[99] != -0.174905", abs(y[99] +0.174905) < 1e-4);
+  return 0;
+}
+
+static char * test_bcsr_A_mul_B() {
+  struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
+  struct BinaryCSR *B = bcsr_from_sbm(A);
+  double* x  = (double*)malloc(A->ncol * sizeof(double));
+  double* y  = (double*)malloc(A->nrow * sizeof(double));
+  double* y2 = (double*)malloc(A->nrow * sizeof(double));
+  for (int i = 0; i < A->ncol; i++) {
+    x[i] = sin(i*19 + 0.4) + cos(i*i*3);
+  }
+  A_mul_B(y2, A, x);
+  bcsr_A_mul_B(y, B, x);
+  mu_assert("error, y[0]  != 1.70095",   abs(y[0] - 1.70095) < 1e-4);
+  mu_assert("error, y[99] != -0.174905", abs(y[99] +0.174905) < 1e-4);
+  for (int i = 0; i < A->nrow; i++) {
+    mu_assert("error, y[i] != ytrue[i]", abs(y[i] - y2[i]) < 1e-4);
+  }
+  return 0;
+}
+
+static char * test_bcsr_AA_mul_B() {
+  struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
+  struct BinaryCSR *B = bcsr_from_sbm(A);
+  double* x  = (double*)malloc(A->ncol * sizeof(double));
+  double* tmp = (double*)malloc(A->nrow * sizeof(double));
+  double* y  = (double*)malloc(A->ncol * sizeof(double));
+  double* y2 = (double*)malloc(A->ncol * sizeof(double));
+  for (int i = 0; i < A->ncol; i++) {
+    x[i] = sin(i*19 + 0.4) + cos(i*i*3);
+  }
+  A_mul_B(tmp, A, x);
+  At_mul_B(y2, A, tmp);
+  bcsr_AA_mul_B(y, B, x);
+  for (int i = 0; i < A->ncol; i++) {
+    mu_assert("error, y[i] != ytrue[i]", abs(y[i] - y2[i]) < 1e-4);
+  }
+
+  // testing parallel version
+  int nthreads = 4;
+#pragma omp parallel
+  {
+#pragma omp single
+    {
+      nthreads = omp_get_num_threads();
+    }
+  }
+  double* ytmp = (double*)malloc(A->ncol * sizeof(double) * nthreads);
+  parallel_bcsr_AA_mul_B(y, B, x, ytmp);
+  for (int i = 0; i < A->ncol; i++) {
+    mu_assert("error, for parallel y[i] != ytrue[i]", abs(y[i] - y2[i]) < 1e-4);
+  }
   return 0;
 }
 
@@ -480,6 +534,8 @@ static char * all_tests() {
     mu_run_test(test_pdot2);
     mu_run_test(test_solve2sym);
     mu_run_test(test_cg);
+    mu_run_test(test_bcsr_A_mul_B);
+    mu_run_test(test_bcsr_AA_mul_B);
     return 0;
 }
 
