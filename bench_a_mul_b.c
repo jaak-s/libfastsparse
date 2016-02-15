@@ -330,12 +330,12 @@ int main(int argc, char **argv) {
 #pragma omp parallel
   {
     if (omp_get_thread_num() % 2 == 0) {
-      execute_mul2(Y, B, Bt, X, cgrepeats, omp_total_threads / 2);
+      execute_mul2(Y, B, Bt, X, cgrepeats / 2, omp_total_threads / 2);
     } else {
-      execute_mul2(Y2, B, Bt, X2, cgrepeats, omp_total_threads / 2);
+      execute_mul2(Y2, B, Bt, X2, cgrepeats / 2, omp_total_threads / 2);
     }
   }
   timing(&wall_stop, &cpu_stop);
-  printf("[2x cg2]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+  printf("[2x cg2]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / (cgrepeats / 2), (cpu_stop - cpu_start)/cgrepeats);
   omp_set_nested(0);
 }
