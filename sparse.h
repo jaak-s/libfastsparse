@@ -236,7 +236,7 @@ void sort_bsbm_byrow(struct BlockedSBM *B) {
 
     long* h = (long*)malloc(nnz * sizeof(long));
     for (long j = 0; j < nnz; j++) {
-      h[j] = rows[j] * B->ncol + cols[j];
+      h[j] = rows[j] * (long)B->ncol + (long)cols[j];
     }
     quickSort(h, 0, nnz - 1);
     for (long j = 0; j < nnz; j++) {

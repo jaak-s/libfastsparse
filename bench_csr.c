@@ -64,17 +64,21 @@ int main(int argc, char **argv) {
   if (tflag) {
     transpose(A);
   }
+  printf("Creating BinaryCSR (sorting).\n");
   struct BinaryCSR* B = bcsr_from_sbm(A);
   printf("Size of B is %d x %d.\n", B->nrow, B->ncol);
   printf("Number of repeats = %d\n", nrepeats);
   printf("Number of CG repeats = %d\n", cgrepeats);
 
   double* y  = (double*)malloc(B->ncol * sizeof(double));
-  //double* y2 = (double*)malloc(B->ncol * sizeof(double));
+  double* y2 = (double*)malloc(B->ncol * sizeof(double));
   double* x  = (double*)malloc(B->ncol * sizeof(double));
 
+  double* tmp = (double*)malloc(B->nrow * sizeof(double));
+  double* yt  = (double*)malloc(B->ncol * sizeof(double));
+
   for (int i = 0; i < B->ncol; i++) {
-    x[i]     = sin(7.0*i + 0.3);
+    x[i] = sin(7.0*i + 0.3) / 10.0;
   }
 
   int nthreads;
@@ -87,13 +91,48 @@ int main(int argc, char **argv) {
   }
   double* ytmp = (double*)malloc(B->ncol * sizeof(double) * nthreads);
 
+  printf("Nthreads = %d\n", nthreads);
+
+  int min_col = 10000000;
+  int max_col = 0;
+  for (int i = 0; i < B->nnz; i++) {
+    if (B->cols[i] > max_col) max_col = B->cols[i];
+    if (B->cols[i] < min_col) min_col = B->cols[i];
+  }
+  int max_ptr = 0;
+  for (int i = 0; i <= B->nrow; i++) {
+    max_ptr = B->row_ptr[i];
+  }
+  printf("Min(cols) = %d, max(cols) = %d\n", min_col, max_col);
+  printf("Max(row_ptr) = %d\n", max_ptr);
+
   double wall_start, cpu_start;
   double wall_stop,  cpu_stop;
 
   timing(&wall_start, &cpu_start);
+  A_mul_B(tmp, A, x);
+  At_mul_B(yt, A, tmp);
+  timing(&wall_stop, &cpu_stop);
+  printf("[A'A x]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start), (cpu_stop - cpu_start));
+
+  timing(&wall_start, &cpu_start);
+  bcsr_AA_mul_B(y2, B, x);
+  timing(&wall_stop, &cpu_stop);
+  printf("[B'B x]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start), (cpu_stop - cpu_start));
+
+  timing(&wall_start, &cpu_start);
+  parallel_bcsr_AA_mul_B(y, B, x, ytmp);
   for (int i = 0; i < nrepeats; i++) {
     parallel_bcsr_AA_mul_B(y, B, x, ytmp);
   }
   timing(&wall_stop, &cpu_stop);
-  printf("[B'B x]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+  printf("[par B'B x]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+
+  for (int j = 0; j < B->ncol; j++) {
+    if (abs(yt[j] - y[j]) > 1e-6) { printf("yt[%d]=%f, y[%d]=%f\n", j, yt[j], j, y[j]); return 1; }
+  }
+
+  for (int j = 0; j < B->ncol; j++) {
+    if (abs(y2[j] - y[j]) > 1e-6) { printf("y2[%d]=%f, y[%d]=%f\n", j, y2[j], j, y[j]); return 1; }
+  }
 }

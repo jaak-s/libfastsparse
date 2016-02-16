@@ -27,12 +27,15 @@ struct BinaryCSR* bcsr_from_sbm(struct SparseBinaryMatrix* sbm) {
   long* h = (long*)malloc(A->nnz * sizeof(long));
 #pragma omp parallel for schedule(static, 1)
   for (int i = 0; i < A->nnz; i++) {
-      h[i] = sbm->rows[i] * sbm->ncol + sbm->cols[i];
+      h[i] = sbm->rows[i] * (long)sbm->ncol + (long)sbm->cols[i];
   }
   quickSort(h, 0, A->nnz - 1);
   int row_prev = -1;
   for (int i = 0; i < A->nnz; i++) {
     A->cols[i] = h[i] % A->ncol;
+    if (A->cols[i] < 0) {
+       printf("A->cols[%d] = %d, h[%d]=%ld\n", i, A->cols[i], i, h[i]);
+    }
     int row    = h[i] / A->ncol;
     while (row > row_prev) {
       row_prev++;
@@ -91,8 +94,8 @@ inline void parallel_bcsr_AA_mul_B(double* y, struct BinaryCSR *A, double* x, do
     const int ithread  = omp_get_thread_num();
     const int ytmp_size = ncol * nthreads;
 
-    double* ytmpi = ytmp + (ncol * ithread);
-    memset(ytmpi, 0, A->ncol * sizeof(double));
+    double* ytmpi = & ytmp[ncol * ithread];
+    memset(ytmpi, 0, ncol * sizeof(double));
 
 #pragma omp for schedule(dynamic, 1024)
     for (int row = 0; row < nrow; row++) {
