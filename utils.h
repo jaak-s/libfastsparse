@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-long read_long(FILE* fh) {
+inline long read_long(FILE* fh) {
   long value;
   size_t result1 = fread(&value, sizeof(long), 1, fh);
   if (result1 != 1) {

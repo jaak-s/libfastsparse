@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-double dist(double* x, double* y, int n) {
+inline double dist(double* x, double* y, int n) {
   double d = 0;
   for (int i = 0; i < n; i++) {
     double diff = x[i] - y[i];
@@ -12,7 +12,7 @@ double dist(double* x, double* y, int n) {
   return sqrt(d);
 }
 
-double pnormsq(double* x, int n) {
+inline double pnormsq(double* x, int n) {
   double normsq = 0.0;
 #pragma omp parallel for reduction(+:normsq) schedule(static)
   for (int i = 0; i < n; i++) {
@@ -21,7 +21,7 @@ double pnormsq(double* x, int n) {
   return normsq;
 }
 
-void pnormsq2(double* normsq, double* X, int n) {
+inline void pnormsq2(double* normsq, double* X, int n) {
   double a = 0.0, b = 0.0;
   const int n2 = n * 2;
 #pragma omp parallel for reduction(+:a, b) schedule(static)
@@ -34,7 +34,7 @@ void pnormsq2(double* normsq, double* X, int n) {
 }
 
 /** computes a'a, b'b, a'b for 2-column matrix X = [a b] */
-void pouter2(double* outer, double* X, int n) {
+inline void pouter2(double* outer, double* X, int n) {
   double aa = 0.0, bb = 0.0, ab = 0.0;
   const int n2 = n * 2;
 #pragma omp parallel for reduction(+:aa, bb, ab) schedule(static)
@@ -48,7 +48,7 @@ void pouter2(double* outer, double* X, int n) {
   outer[2] = ab;
 }
 
-double pdot(double* x, double* y, int n) {
+inline double pdot(double* x, double* y, int n) {
   double d = 0.0;
 #pragma omp parallel for reduction(+:d) schedule(static)
   for (int i = 0; i < n; i++) {
@@ -58,7 +58,7 @@ double pdot(double* x, double* y, int n) {
 }
 
 // symmetric D = X.dot(Y) for 2-column matrices X and Y
-void pdot2sym(double* D, double* X, double* Y, int n) {
+inline void pdot2sym(double* D, double* X, double* Y, int n) {
   double aa = 0.0, bb = 0.0, ab = 0.0;
   const int n2 = n * 2;
 #pragma omp parallel for reduction(+:aa, bb, ab) schedule(static)

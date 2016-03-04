@@ -18,7 +18,7 @@ struct SparseBinaryMatrix
 };
 
 /** constructor, computes nrow and ncol from data */
-struct SparseBinaryMatrix* new_sbm(long nrow, long ncol, long nnz, int* rows, int* cols) {
+inline struct SparseBinaryMatrix* new_sbm(long nrow, long ncol, long nnz, int* rows, int* cols) {
   struct SparseBinaryMatrix *A = (struct SparseBinaryMatrix*)malloc(sizeof(struct SparseBinaryMatrix));
   A->nnz  = nnz;
   A->rows = rows;
@@ -28,7 +28,7 @@ struct SparseBinaryMatrix* new_sbm(long nrow, long ncol, long nnz, int* rows, in
   return A;
 }
 
-struct SparseBinaryMatrix* new_transpose(struct SparseBinaryMatrix *A) {
+inline struct SparseBinaryMatrix* new_transpose(struct SparseBinaryMatrix *A) {
   struct SparseBinaryMatrix *B = (struct SparseBinaryMatrix*)malloc(sizeof(struct SparseBinaryMatrix));
   B->nnz  = A->nnz;
   B->rows = A->cols;
@@ -38,7 +38,7 @@ struct SparseBinaryMatrix* new_transpose(struct SparseBinaryMatrix *A) {
   return B;
 }
 
-void transpose(struct SparseBinaryMatrix *A) {
+inline void transpose(struct SparseBinaryMatrix *A) {
   int* tmp = A->rows;
   A->rows = A->cols;
   A->cols = tmp;
@@ -67,13 +67,13 @@ inline void At_mul_B(double* y, struct SparseBinaryMatrix *A, double* x) {
   }
 }
 
-double exprand() {
+inline double exprand() {
   double x = 1 - drand48();
   return log1p(x);
   
 }
 
-double randexp() {
+inline double randexp() {
   return -log(1 - drand48());
 }
 
@@ -82,7 +82,7 @@ double randexp() {
  *  @output samples   array for storing sampled values
  *  @returns          number of sampled values
  **/
-long randsubseq(long N, long max_samples, double p, long* samples) {
+inline long randsubseq(long N, long max_samples, double p, long* samples) {
   double L = -1.0 / log1p(-p);
   long i = -1;
   long j = 0;
@@ -102,7 +102,7 @@ long randsubseq(long N, long max_samples, double p, long* samples) {
   }
 }
 
-struct SparseBinaryMatrix* read_sbm(const char *filename) {
+inline struct SparseBinaryMatrix* read_sbm(const char *filename) {
   FILE* fh = fopen( filename, "r" );
   size_t result1, result2;
   if (fh == NULL) {
@@ -132,7 +132,7 @@ struct SparseBinaryMatrix* read_sbm(const char *filename) {
 } 
 
 /** sorts SBM according to Hilbert curve */
-void sort_sbm(struct SparseBinaryMatrix *A) {
+inline void sort_sbm(struct SparseBinaryMatrix *A) {
   int* rows = A->rows;
   int* cols = A->cols;
 
@@ -165,7 +165,7 @@ struct BlockedSBM {
 };
 
 /** constructor for blocked rows */
-struct BlockedSBM* new_bsbm(struct SparseBinaryMatrix* A, int block_size) {
+inline struct BlockedSBM* new_bsbm(struct SparseBinaryMatrix* A, int block_size) {
   struct BlockedSBM *B = (struct BlockedSBM*)malloc(sizeof(struct BlockedSBM));
   B->nrow = A->nrow;
   B->ncol = A->ncol;
@@ -205,7 +205,7 @@ struct BlockedSBM* new_bsbm(struct SparseBinaryMatrix* A, int block_size) {
   return B;
 }
 
-void sort_bsbm(struct BlockedSBM *B) {
+inline void sort_bsbm(struct BlockedSBM *B) {
   for (int block = 0; block < B->nblocks; block++) {
     int* rows = B->rows[block];
     int* cols = B->cols[block];
@@ -228,7 +228,7 @@ void sort_bsbm(struct BlockedSBM *B) {
   }
 }
 
-void sort_bsbm_byrow(struct BlockedSBM *B) {
+inline void sort_bsbm_byrow(struct BlockedSBM *B) {
   for (int block = 0; block < B->nblocks; block++) {
     int* rows = B->rows[block];
     int* cols = B->cols[block];

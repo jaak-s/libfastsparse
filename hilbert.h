@@ -3,17 +3,17 @@
 
 #include <stdlib.h>
 
-long xy2d(int, int, int);
-void d2xy(int, long, int*, int*);
-void rot(int, int*, int*, int, int);
-int ceilPower2(int);
+inline long xy2d(int, int, int);
+inline void d2xy(int, long, int*, int*);
+inline void rot(int, int*, int*, int, int);
+inline int ceilPower2(int);
 
-int ceilPower2(int x) {
+inline int ceilPower2(int x) {
   return 1 << (int)ceil(log2(x));
 }
 
 //convert (x,y) to d
-long xy2d (int n, int x, int y) {
+inline long xy2d (int n, int x, int y) {
     int rx, ry;
     long s;
     long d=0;
@@ -27,7 +27,7 @@ long xy2d (int n, int x, int y) {
 }
 
 //convert d to (x,y)
-void d2xy(int n, long d, int *x, int *y) {
+inline void d2xy(int n, long d, int *x, int *y) {
     int rx, ry, s;
     long t = d;
     *x = *y = 0;
@@ -42,7 +42,7 @@ void d2xy(int n, long d, int *x, int *y) {
 }
 
 //rotate/flip a quadrant appropriately
-void rot(int n, int *x, int *y, int rx, int ry) {
+inline void rot(int n, int *x, int *y, int rx, int ry) {
     if (ry == 0) {
         if (rx == 1) {
             *x = n-1 - *x;
@@ -57,7 +57,7 @@ void rot(int n, int *x, int *y, int rx, int ry) {
 }
 
 // x (row) should be between 0 and n-1
-long row_xy2d(int n, int x, int y) {
+inline long row_xy2d(int n, int x, int y) {
   int y2 = y % n;
   long nsq = (long)n * (long)n;
   // order of (x,y) is reversed for better cache locality
@@ -65,7 +65,7 @@ long row_xy2d(int n, int x, int y) {
 }
 
 // returned (x, y) has x within 0 and n - 1
-void row_d2xy(int n, long d, int *x, int *y) {
+inline void row_d2xy(int n, long d, int *x, int *y) {
   long nsq  = (long)n * (long)n;
   long h    = d % nsq;
   int block = d / nsq;
