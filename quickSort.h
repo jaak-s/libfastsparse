@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-inline void quickSort(long[], long, long);
+void quickSort(long a[], long l, long r);
 inline long partition(long[], long, long);
 inline void insertionSort(long[], long, long);
 
