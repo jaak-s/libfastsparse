@@ -5,6 +5,8 @@
 #include <math.h>
 #include <omp.h>
 
+#include "quickSort.h"
+
 /*** binary CSR ***/
 struct BinaryCSR
 {
@@ -55,7 +57,7 @@ struct BinaryCSR* bcsr_from_sbm(struct SparseBinaryMatrix* sbm) {
 inline void bcsr_A_mul_B(double* y, struct BinaryCSR *A, double* x) {
   int* row_ptr = A->row_ptr;
   int* cols    = A->cols;
-  memset(y, 0, A->nrow * sizeof(double));
+#pragma omp parallel for schedule(dynamic, 256)
   for (int row = 0; row < A->nrow; row++) {
     double tmp = 0;
     for (int i = row_ptr[row]; i < row_ptr[row + 1]; i++) {

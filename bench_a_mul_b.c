@@ -11,9 +11,10 @@
 
 void usage() {
   printf("Usage:\n");
-  printf("  bench_a_mul_c -f <matrix_file> [-b block_size] [-t] [-c]\n");
+  printf("  bench_a_mul_c -f <matrix_file> [-b block_size] [-t] [-c] [-r]\n");
   printf("  -t  transpose matrix\n");
   printf("  -c  run conjugate gradient\n");
+  printf("  -r  also run CSR A_mul_b\n");
 }
 
 void extrema(int* x, long n, int* min, int* max) {
@@ -77,6 +78,7 @@ void execute_mul2(double* Y, struct BlockedSBM* B, struct BlockedSBM* Bt, double
 
 int main(int argc, char **argv) {
   int cgflag = 0;
+  int csrflag = 0;
   int tflag  = 0;
   char* filename = NULL;
   int block_size = 1024;
@@ -84,11 +86,12 @@ int main(int argc, char **argv) {
 
   opterr = 0;
 
-  while ((c = getopt(argc, argv, "b:cf:t")) != -1)
+  while ((c = getopt(argc, argv, "b:cf:rt")) != -1)
     switch (c) {
       case 'b': block_size = atoi(optarg); break;
       case 'c': cgflag = 1; break;
       case 'f': filename = optarg; break;
+      case 'r': csrflag = 1; break;
       case 't': tflag = 1; break;
       case '?':
         if (optopt == 'f')
@@ -247,6 +250,17 @@ int main(int argc, char **argv) {
   timing(&wall_stop, &cpu_stop);
   printf("[cg2]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
 
+  if (csrflag) {
+    struct BinaryCSR* csr = bcsr_from_sbm(A);
+    bcsr_A_mul_B(y, csr, x);
+
+    timing(&wall_start, &cpu_start);
+    for (int i = 0; i < nrepeats; i++) {
+      bcsr_A_mul_B(y, csr, x);
+    }
+    timing(&wall_stop, &cpu_stop);
+    printf("[csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+  }
 
   /////// Running Macau BlockCG with 2 RHSs //////
   if (cgflag) {
