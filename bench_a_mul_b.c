@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
         return 2;
     }
   int nrepeats = 10;
-  int cgrepeats = 100;
+  int cgrepeats = 20;
 
   if (filename == NULL) {
     fprintf(stderr, "Input matrix file missing.\n");
@@ -239,16 +239,16 @@ int main(int argc, char **argv) {
     bsbm_A_mul_B(x, Bt, y);
   }
   timing(&wall_stop, &cpu_stop);
-  printf("[cg]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+  printf("[cg]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
 
-  /////// CG with X //////
+  /////// CG2 with X //////
   timing(&wall_start, &cpu_start);
   for (int i = 0; i < cgrepeats; i++) {
     bsbm_A_mul_B2(Y, B,  X);
     bsbm_A_mul_B2(X, Bt, Y);
   }
   timing(&wall_stop, &cpu_stop);
-  printf("[cg2]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+  printf("[cg2]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
 
   if (csrflag) {
     struct BinaryCSR* csr = bcsr_from_sbm(A);
@@ -259,7 +259,27 @@ int main(int argc, char **argv) {
       bcsr_A_mul_B(y, csr, x);
     }
     timing(&wall_stop, &cpu_stop);
-    printf("[csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+    printf("[csr]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+
+    // [csr2]
+    bcsr_A_mul_B2(Y, csr, X);
+    timing(&wall_start, &cpu_start);
+    for (int i = 0; i < nrepeats; i++) {
+      bcsr_A_mul_B2(Y, csr, X);
+    }
+    timing(&wall_stop, &cpu_stop);
+    printf("[csr2]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
+
+    // [cg2-csr]
+    struct BinaryCSR* csrt = bcsr_from_sbm(At);
+    bcsr_A_mul_B2(X, csrt, Y);
+    timing(&wall_start, &cpu_start);
+    for (int i = 0; i < cgrepeats; i++) {
+      bcsr_A_mul_B2(Y, csr,  X);
+      bcsr_A_mul_B2(X, csrt, Y);
+    }
+    timing(&wall_stop, &cpu_stop);
+    printf("[cg2-csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
   }
 
   /////// Running Macau BlockCG with 2 RHSs //////

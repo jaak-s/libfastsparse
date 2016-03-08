@@ -276,6 +276,15 @@ static char * test_blocked_sbm() {
     mu_assert("error, |y[row] - Y[row,1]| > 1e-6", abs(y[row] - Y[row*2]) < 1e-6);
     mu_assert("error, |y2[row] - Y[row,2]| > 1e-6", abs(y2[row] - Y[row*2+1]) < 1e-6);
   }
+
+  // checking also BinaryCSR
+  struct BinaryCSR *csr = bcsr_from_sbm(A);
+  double* Y2 = (double*) malloc(B->nrow * 2 * sizeof(double));
+  bcsr_A_mul_B2(Y2, csr, X);
+  for (int row = 0; row < A->nrow; row++) {
+    mu_assert("error, |y[row] - Ycsr[row,1]| > 1e-6", abs(y[row] - Y2[row*2]) < 1e-6);
+    mu_assert("error, |y2[row] - Ycsr[row,2]| > 1e-6", abs(y2[row] - Y2[row*2+1]) < 1e-6);
+  }
   return 0;
 }
 
