@@ -86,6 +86,26 @@ inline void bcsr_A_mul_B2(double* Y, struct BinaryCSR *A, double* X) {
   }
 }
 
+/** Y = A * X, where Y and X have 4 columns and are row-ordered */
+inline void bcsr_A_mul_B4(double* Y, struct BinaryCSR *A, double* X) {
+  int* row_ptr = A->row_ptr;
+  int* cols    = A->cols;
+#pragma omp parallel for schedule(dynamic, 256)
+  for (int row = 0; row < A->nrow; row++) {
+    double tmp[4] = { 0 };
+    for (int i = row_ptr[row]; i < row_ptr[row + 1]; i++) {
+      int col = cols[i] << 2; // multiplying with 4
+      for (int j = 0; j < 4; j++) {
+         tmp[j] += X[col + j];
+      }
+    }
+    int r = row << 2;
+    for (int j = 0; j < 4; j++) {
+      Y[r + j] = tmp[j];
+    }
+  }
+}
+
 /** Y = A * X, where Y and X have 8 columns and are row-ordered */
 inline void bcsr_A_mul_B8(double* Y, struct BinaryCSR *A, double* X) {
   int* row_ptr = A->row_ptr;
@@ -103,6 +123,31 @@ inline void bcsr_A_mul_B8(double* Y, struct BinaryCSR *A, double* X) {
     for (int j = 0; j < 8; j++) {
       Y[r + j] = tmp[j];
     }
+  }
+}
+
+/** Y = A * X, where Y and X have <ncol> columns and are row-ordered */
+inline void bcsr_A_mul_Bn(double* Y, struct BinaryCSR *A, double* X, const int ncol) {
+  int* row_ptr = A->row_ptr;
+  int* cols    = A->cols;
+#pragma omp parallel 
+  {
+    double* tmp = (double*)malloc(ncol * sizeof(double));
+#pragma omp parallel for schedule(dynamic, 256)
+    for (int row = 0; row < A->nrow; row++) {
+      memset(tmp, 0, ncol * sizeof(double));
+      for (int i = row_ptr[row]; i < row_ptr[row + 1]; i++) {
+        int col = cols[i] * ncol;
+        for (int j = 0; j < ncol; j++) {
+           tmp[j] += X[col + j];
+        }
+      }
+      int r = row * ncol;
+      for (int j = 0; j < ncol; j++) {
+        Y[r + j] = tmp[j];
+      }
+    }
+    free(tmp);
   }
 }
 
