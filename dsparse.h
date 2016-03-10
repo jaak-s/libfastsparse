@@ -101,12 +101,12 @@ inline void sort_sdm(struct SparseDoubleMatrix *A) {
   int n = ceilPower2(maxrc);
 
   long* h = (long*)malloc(A->nnz * sizeof(long));
-#pragma omp parallel for schedule(static, 1)
+#pragma omp parallel for schedule(static)
   for (long j = 0; j < A->nnz; j++) {
     h[j] = xy2d(n, rows[j], cols[j]);
   }
   quickSortD(h, 0, A->nnz - 1, A->vals);
-#pragma omp parallel for schedule(static, 1)
+#pragma omp parallel for schedule(static)
   for (long j = 0; j < A->nnz; j++) {
     d2xy(n, h[j], &rows[j], &cols[j]);
   }
@@ -200,12 +200,12 @@ inline void sort_bsdm(struct BlockedSDM *B) {
 
     // convert to hilbert, sort, convert back
     long* h = (long*)malloc(nnz * sizeof(long));
-#pragma omp parallel for schedule(static, 1)
+#pragma omp parallel for schedule(static)
     for (long j = 0; j < nnz; j++) {
       h[j] = row_xy2d(n, rows[j] - start_row, cols[j]);
     }
     quickSortD(h, 0, nnz - 1, B->vals[block]);
-#pragma omp parallel for schedule(static, 1)
+#pragma omp parallel for schedule(static)
     for (long j = 0; j < nnz; j++) {
       row_d2xy(n, h[j], &rows[j], &cols[j]);
       rows[j] += start_row;
