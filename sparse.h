@@ -28,6 +28,13 @@ inline struct SparseBinaryMatrix* new_sbm(long nrow, long ncol, long nnz, int* r
   return A;
 }
 
+inline void free_sbm(struct SparseBinaryMatrix* sbm) {
+  free( sbm->rows );
+  free( sbm->cols );
+}
+
+
+
 inline struct SparseBinaryMatrix* new_transpose(struct SparseBinaryMatrix *A) {
   struct SparseBinaryMatrix *B = (struct SparseBinaryMatrix*)malloc(sizeof(struct SparseBinaryMatrix));
   B->nnz  = A->nnz;
@@ -129,10 +136,10 @@ inline struct SparseBinaryMatrix* read_sbm(const char *filename) {
   }
 
   return new_sbm(nrow, ncol, nnz, rows, cols);
-} 
+}
 
 /** sorts SBM according to Hilbert curve */
-inline void sort_sbm(struct SparseBinaryMatrix *A) {
+static inline void sort_sbm(struct SparseBinaryMatrix *A) {
   int* rows = A->rows;
   int* cols = A->cols;
 
@@ -205,7 +212,7 @@ inline struct BlockedSBM* new_bsbm(struct SparseBinaryMatrix* A, int block_size)
   return B;
 }
 
-inline void sort_bsbm(struct BlockedSBM *B) {
+static inline void sort_bsbm(struct BlockedSBM *B) {
   for (int block = 0; block < B->nblocks; block++) {
     int* rows = B->rows[block];
     int* cols = B->cols[block];
@@ -228,7 +235,7 @@ inline void sort_bsbm(struct BlockedSBM *B) {
   }
 }
 
-inline void sort_bsbm_byrow(struct BlockedSBM *B) {
+static inline void sort_bsbm_byrow(struct BlockedSBM *B) {
   for (int block = 0; block < B->nblocks; block++) {
     int* rows = B->rows[block];
     int* cols = B->cols[block];
