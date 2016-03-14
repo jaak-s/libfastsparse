@@ -3,11 +3,11 @@
 
 #include <stdio.h>
 
-void quickSort(long a[], long l, long r);
-inline long partition(long[], long, long);
-inline void insertionSort(long[], long, long);
+static void quickSort(long a[], long l, long r);
+static long partition(long[], long, long);
+static void insertionSort(long[], long, long);
 
-inline void quickSort(long a[], long l, long r) {
+void quickSort(long a[], long l, long r) {
   if (r - l < 10) {
     insertionSort(a, l, r);
     return;
@@ -24,7 +24,7 @@ inline void quickSort(long a[], long l, long r) {
 }
 
 
-inline long partition(long a[], long l, long r) {
+long partition(long a[], long l, long r) {
   long pivot, i, j, t;
   pivot = a[(l+r)/2];
   // moving pivot to l, while(1) assumes it
@@ -44,7 +44,7 @@ inline long partition(long a[], long l, long r) {
   return j;
 }
 
-inline void insertionSort(long list[], long start, long end) {
+void insertionSort(long list[], long start, long end) {
   for (long x = start + 1; x <= end; x++) {
     long val = list[x];
     long j = x - 1;

@@ -251,32 +251,34 @@ int main(int argc, char **argv) {
   printf("[cg2]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
 
   if (csrflag) {
-    struct BinaryCSR* csr = bcsr_from_sbm(A);
-    bcsr_A_mul_B(y, csr, x);
+    struct BinaryCSR csr;
+    bcsr_from_sbm(&csr, A);
+    bcsr_A_mul_B(y, &csr, x);
 
     timing(&wall_start, &cpu_start);
     for (int i = 0; i < nrepeats; i++) {
-      bcsr_A_mul_B(y, csr, x);
+      bcsr_A_mul_B(y, &csr, x);
     }
     timing(&wall_stop, &cpu_stop);
     printf("[csr]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
 
     // [csr2]
-    bcsr_A_mul_B2(Y, csr, X);
+    bcsr_A_mul_B2(Y, &csr, X);
     timing(&wall_start, &cpu_start);
     for (int i = 0; i < nrepeats; i++) {
-      bcsr_A_mul_B2(Y, csr, X);
+      bcsr_A_mul_B2(Y, &csr, X);
     }
     timing(&wall_stop, &cpu_stop);
     printf("[csr2]\t\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / nrepeats, (cpu_stop - cpu_start)/nrepeats);
 
     // [cg2-csr]
-    struct BinaryCSR* csrt = bcsr_from_sbm(At);
-    bcsr_A_mul_B2(X, csrt, Y);
+    struct BinaryCSR csrt; 
+    bcsr_from_sbm(&csrt, At);
+    bcsr_A_mul_B2(X, &csrt, Y);
     timing(&wall_start, &cpu_start);
     for (int i = 0; i < cgrepeats; i++) {
-      bcsr_A_mul_B2(Y, csr,  X);
-      bcsr_A_mul_B2(X, csrt, Y);
+      bcsr_A_mul_B2(Y, &csr,  X);
+      bcsr_A_mul_B2(X, &csrt, Y);
     }
     timing(&wall_stop, &cpu_stop);
     printf("[cg2-csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);

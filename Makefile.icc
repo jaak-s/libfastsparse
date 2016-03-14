@@ -1,7 +1,7 @@
 CC=icc
-CFLAGS=-std=gnu99 -Wall -DNDEBUG -O3 -xHost -openmp -lm -fno-alias -lirng
+CFLAGS=-std=gnu99 -debug all -Wall -DNDEBUG -O2 -fno-inline-functions -xHost -axMIC-AVX512 -qopenmp -lm -fno-alias -lirng
 
-all: test bench
+all: test bench preprocess
 
 test:
 	$(CC) test_sparse.c $(CFLAGS) -o test_sparse
@@ -10,5 +10,8 @@ bench:
 	$(CC) bench_a_mul_b.c $(CFLAGS) -o bench_a_mul_b
 	$(CC) bench_csr.c $(CFLAGS) -o bench_csr
 
+preprocess: preprocess.c csr.h
+	$(CC) preprocess.c $(CFLAGS) -o preprocess
+
 clean:
-	rm -f test_sparse bench_a_mul_b
+	rm -f test_sparse bench_a_mul_b bench_csr preprocess
