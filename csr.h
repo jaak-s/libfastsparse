@@ -21,13 +21,13 @@ struct BinaryCSR
   int* cols;
 };
 
-void free_bcsr(struct BinaryCSR* bcsr) {
+inline void free_bcsr(struct BinaryCSR* bcsr) {
   assert(bcsr);
   free(bcsr->row_ptr);
   free(bcsr->cols);
 }
 
-static inline void new_bcsr(struct BinaryCSR* restrict A, long nnz, int nrow, int ncol, int* rows, int* cols) {
+static inline void new_bcsr(struct BinaryCSR* __restrict__ A, long nnz, int nrow, int ncol, int* rows, int* cols) {
   assert(A);
   //struct BinaryCSR *A = (struct BinaryCSR*)malloc(sizeof(struct BinaryCSR));
   A->nnz  = nnz;
@@ -61,8 +61,8 @@ static inline void new_bcsr(struct BinaryCSR* restrict A, long nnz, int nrow, in
   free(h);
 }
 
-static inline void bcsr_from_sbm(struct BinaryCSR* restrict A,
-                                       struct SparseBinaryMatrix* restrict sbm) {
+static inline void bcsr_from_sbm(struct BinaryCSR* __restrict__ A,
+                                 struct SparseBinaryMatrix* __restrict__ sbm) {
   assert(A);
   assert(sbm);
   new_bcsr(A, sbm->nnz, sbm->nrow, sbm->ncol, sbm->rows, sbm->cols);
