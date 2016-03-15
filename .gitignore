@@ -2,5 +2,6 @@
 test_sparse
 bench_a_mul_b
 bench_csr
+preprocess
 *.o
 .*.swp
