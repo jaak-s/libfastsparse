@@ -297,4 +297,114 @@ inline void parallel_bcsr_AA_mul_B(double* y, struct BinaryCSR *A, double* x, do
   }
 }
 
+/*** Double CSR ***/
+struct CSR
+{
+  int nrow;
+  int ncol;
+  long nnz;
+  int* row_ptr; /* points to the row starts for each row */
+  int* cols;
+  double* vals;
+};
+
+inline void free_csr(struct CSR* csr) {
+  assert(csr);
+  free(csr->row_ptr);
+  free(csr->cols);
+  free(csr->vals);
+}
+
+static inline void new_csr(
+    struct CSR* __restrict__ A,
+    long nnz,
+    int nrow,
+    int ncol,
+    int* rows,
+    int* cols,
+    double* vals)
+{
+  assert(A);
+  A->nnz  = nnz;
+  A->nrow = nrow;
+  A->ncol = ncol;
+  A->cols    = (int*)malloc(nnz * sizeof(int));
+  A->vals    = (double*)malloc(nnz * sizeof(double));
+  A->row_ptr = (int*)malloc( (nrow + 1) * sizeof(int));
+
+  //compute number of non-zero entries per row of A 
+  for (int row = 0; row < nrow; row++) {
+    A->row_ptr[row] = 0;
+  }
+
+  for (int i = 0; i < nnz; i++) {            
+    A->row_ptr[rows[i]]++;
+  }
+  // cumsum counts
+  for (int row = 0, cumsum = 0; row < nrow; row++) {
+    int temp = A->row_ptr[row];
+    A->row_ptr[row] = cumsum;
+    cumsum += temp;
+  }
+  A->row_ptr[nrow] = nnz;
+
+  // writing cols and vals to A->cols and A->vals
+  for (int i = 0; i < nnz; i++) {
+    int row = rows[i];
+    int dest = A->row_ptr[row];
+    A->cols[dest] = cols[i];
+    A->vals[dest] = vals[i];
+
+    A->row_ptr[row]++;
+  }
+  for (int row = 0, prev = 0; row <= nrow; row++) {
+    int temp        = A->row_ptr[row];
+    A->row_ptr[row] = prev;
+    prev            = temp;
+  }
+}
+
+/** y = A * x */
+inline void csr_A_mul_B(double* y, struct CSR *A, double* x) {
+  int* row_ptr = A->row_ptr;
+  int* cols    = A->cols;
+  double* vals = A->vals;
+#pragma omp parallel for schedule(dynamic, 256)
+  for (int row = 0; row < A->nrow; row++) {
+    double tmp = 0;
+    const int end = row_ptr[row + 1];
+    for (int i = row_ptr[row]; i < end; i++) {
+      tmp += x[cols[i]] * vals[i];
+    }
+    y[row] = tmp;
+  }
+}
+
+/** Y = A * X, where Y and X have <ncol> columns and are row-ordered */
+inline void csr_A_mul_Bn(double* Y, struct CSR *A, double* X, const int ncol) {
+  int* row_ptr = A->row_ptr;
+  int* cols    = A->cols;
+  double* vals = A->vals;
+#pragma omp parallel 
+  {
+    double* tmp = (double*)malloc(ncol * sizeof(double));
+#pragma omp parallel for schedule(dynamic, 256)
+    for (int row = 0; row < A->nrow; row++) {
+      memset(tmp, 0, ncol * sizeof(double));
+      for (int i = row_ptr[row], end = row_ptr[row + 1]; i < end; i++) {
+        int col = cols[i] * ncol;
+        double val = vals[i];
+        for (int j = 0; j < ncol; j++) {
+           tmp[j] += X[col + j] * val;
+        }
+      }
+      int r = row * ncol;
+      for (int j = 0; j < ncol; j++) {
+        Y[r + j] = tmp[j];
+      }
+    }
+    free(tmp);
+  }
+}
+
 #endif /* CSR_H */

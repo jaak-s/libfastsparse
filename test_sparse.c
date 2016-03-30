@@ -376,10 +376,42 @@ static char * test_A_mul_B_sdm() {
   return 0;
 }
 
+static char * test_A_mul_B_csr() {
+  struct SparseDoubleMatrix *A = make_sdm();
+  struct CSR *csr = (struct CSR*)malloc(sizeof(struct CSR));
+  new_csr(csr, A->nnz, A->nrow, A->ncol, A->rows, A->cols, A->vals);
+  double x[] = {0.5, -0.7, 1.9, 2.3};
+  double* y = (double*)malloc(csr->nrow * sizeof(double));
+  double yt[] = {2.162, 2.224, 0.713, -0.378, 2.216, 0.437};
+  // multiplication
+  csr_A_mul_B(y, csr, x);
+  for (int i = 0; i < A->nrow; i++) {
+    mu_assert("error, csr_A_mul_B is wrong", fabs(y[i] - yt[i]) < 1e-6);
+  }
+  free_csr(csr);
+  return 0;
+}
+
+static char * test_A_mul_Bn_csr() {
+  struct SparseDoubleMatrix *A = make_sdm();
+  struct CSR *csr = (struct CSR*)malloc(sizeof(struct CSR));
+  new_csr(csr, A->nnz, A->nrow, A->ncol, A->rows, A->cols, A->vals);
+  double x[] = {0.5, 5.0, -0.7, -7.0, 1.9, 19.0, 2.3, 23.0};
+  double* y = (double*)malloc(csr->nrow * sizeof(double));
+  double yt[] = {2.162, 21.62, 2.224, 22.24, 0.713, 7.13, -0.378, -3.78, 2.216, 22.16, 0.437, 4.37};
+  // multiplication
+  csr_A_mul_Bn(y, csr, x, 2);
+  for (int i = 0; i < A->nrow; i++) {
+    mu_assert("error, csr_A_mul_B is wrong", fabs(y[i] - yt[i]) < 1e-6);
+  }
+  free_csr(csr);
+  return 0;
+}
+
 static char * test_At_mul_B_sdm() {
   struct SparseDoubleMatrix *A = make_sdm();
   double x[] = {0.59, 0.37, 0.14, 0.21, 0.40, 0.81};
-  double y[] = {0, 0, 0, 0};
+  double y[] = {-1, 0, 0, 0};
   double yt[] = {0.2405, 0.6602, 0.483, 1.2102};
   // multiplication
   sdm_At_mul_B(y, A, x);
@@ -582,6 +614,8 @@ static char * all_tests() {
     mu_run_test(test_bcsr_A_mul_B);
     mu_run_test(test_bcsr_AA_mul_B);
     mu_run_test(test_bcsr_serialization);
+    mu_run_test(test_A_mul_B_csr);
+    mu_run_test(test_A_mul_Bn_csr);
     return 0;
 }
 
