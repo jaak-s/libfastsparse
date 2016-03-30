@@ -397,11 +397,11 @@ static char * test_A_mul_Bn_csr() {
   struct CSR *csr = (struct CSR*)malloc(sizeof(struct CSR));
   new_csr(csr, A->nnz, A->nrow, A->ncol, A->rows, A->cols, A->vals);
   double x[] = {0.5, 5.0, -0.7, -7.0, 1.9, 19.0, 2.3, 23.0};
-  double* y = (double*)malloc(csr->nrow * sizeof(double));
+  double* y = (double*)malloc(2 * csr->nrow * sizeof(double));
   double yt[] = {2.162, 21.62, 2.224, 22.24, 0.713, 7.13, -0.378, -3.78, 2.216, 22.16, 0.437, 4.37};
   // multiplication
   csr_A_mul_Bn(y, csr, x, 2);
-  for (int i = 0; i < A->nrow; i++) {
+  for (int i = 0; i < 2 * A->nrow; i++) {
     mu_assert("error, csr_A_mul_B is wrong", fabs(y[i] - yt[i]) < 1e-6);
   }
   free_csr(csr);
