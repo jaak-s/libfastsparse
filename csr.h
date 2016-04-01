@@ -36,29 +36,34 @@ static inline void new_bcsr(struct BinaryCSR* __restrict__ A, long nnz, int nrow
   A->cols = (int*)malloc(nnz * sizeof(int));
   A->row_ptr = (int*)malloc( (nrow + 1) * sizeof(int));
 
-  // sorting by row:
-  long* h = (long*)malloc(A->nnz * sizeof(long));
-#pragma omp parallel for schedule(static)
-  for (int i = 0; i < A->nnz; i++) {
-      h[i] = rows[i] * (long)ncol + (long)cols[i];
+  //compute number of non-zero entries per row of A
+  for (int row = 0; row < nrow; row++) {
+    A->row_ptr[row] = 0;
   }
-  quickSort(h, 0, nnz - 1);
-  int row_prev = -1;
+
   for (int i = 0; i < nnz; i++) {
-    A->cols[i] = h[i] % ncol;
-    if (A->cols[i] < 0) {
-       printf("A->cols[%d] = %d, h[%d]=%ld\n", i, A->cols[i], i, h[i]);
-    }
-    int row = h[i] / ncol;
-    while (row > row_prev) {
-      row_prev++;
-      A->row_ptr[row_prev] = i;
-    }
+    A->row_ptr[rows[i]]++;
   }
-  for (int row = row_prev + 1; row <= nrow; row++) {
-    A->row_ptr[row] = nnz;
+  // cumsum counts
+  for (int row = 0, cumsum = 0; row < nrow; row++) {
+    int temp = A->row_ptr[row];
+    A->row_ptr[row] = cumsum;
+    cumsum += temp;
   }
-  free(h);
+  A->row_ptr[nrow] = nnz;
+
+  // writing cols and vals to A->cols and A->vals
+  for (int i = 0; i < nnz; i++) {
+    int row  = rows[i];
+    int dest = A->row_ptr[row];
+    A->cols[dest] = cols[i];
+    A->row_ptr[row]++;
+  }
+  for (int row = 0, prev = 0; row <= nrow; row++) {
+    int temp        = A->row_ptr[row];
+    A->row_ptr[row] = prev;
+    prev            = temp;
+  }
 }
 
 static inline void bcsr_from_sbm(struct BinaryCSR* __restrict__ A,
@@ -221,7 +226,7 @@ inline void bcsr_A_mul_B8(double* Y, struct BinaryCSR *A, double* X) {
 inline void bcsr_A_mul_Bn(double* Y, struct BinaryCSR *A, double* X, const int ncol) {
   int* row_ptr = A->row_ptr;
   int* cols    = A->cols;
-#pragma omp parallel 
+#pragma omp parallel
   {
     double* tmp = (double*)malloc(ncol * sizeof(double));
 #pragma omp parallel for schedule(dynamic, 256)
@@ -332,12 +337,12 @@ static inline void new_csr(
   A->vals    = (double*)malloc(nnz * sizeof(double));
   A->row_ptr = (int*)malloc( (nrow + 1) * sizeof(int));
 
-  //compute number of non-zero entries per row of A 
+  //compute number of non-zero entries per row of A
   for (int row = 0; row < nrow; row++) {
     A->row_ptr[row] = 0;
   }
 
-  for (int i = 0; i < nnz; i++) {            
+  for (int i = 0; i < nnz; i++) {
     A->row_ptr[rows[i]]++;
   }
   // cumsum counts
@@ -385,7 +390,7 @@ inline void csr_A_mul_Bn(double* Y, struct CSR *A, double* X, const int ncol) {
   int* row_ptr = A->row_ptr;
   int* cols    = A->cols;
   double* vals = A->vals;
-#pragma omp parallel 
+#pragma omp parallel
   {
     double* tmp = (double*)malloc(ncol * sizeof(double));
 #pragma omp parallel for schedule(dynamic, 256)
