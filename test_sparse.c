@@ -9,6 +9,7 @@
 #include "linalg.h"
 #include "cg.h"
 #include "csr.h"
+#include "cbcsr.h"
 
 int tests_run = 0;
 
@@ -106,6 +107,51 @@ static char * test_bcsr_AA_mul_B() {
   parallel_bcsr_AA_mul_B(y, &B, x, ytmp);
   for (int i = 0; i < A->ncol; i++) {
     mu_assert("error, for parallel y[i] != ytrue[i]", fabs(y[i] - y2[i]) < 1e-4);
+  }
+  return 0;
+}
+
+static char * test_cbcsr() {
+  struct SparseBinaryMatrix *A = make_sbm();
+  struct ColBinaryCSR B;
+  cbcsr_from_sbm(&B, A, 2);
+  mu_assert("error, cbcsr.nblocks != 2", B.nblocks == 2);
+  mu_assert("error, cbcsr.colblocksize != 2", B.colblocksize == 2);
+  mu_assert("error, cbcsr.nrow != A.nrow", B.nrow == A->nrow);
+  mu_assert("error, cbcsr.ncol != A.ncol", B.ncol == A->ncol);
+
+  double* x = (double*)malloc(A->ncol * sizeof(double));
+  double* y = (double*)malloc(A->nrow * sizeof(double));
+  x[0] = 0.5;
+  x[1] = -0.7;
+  x[2] = 1.9;
+  // multiplication
+  cbcsr_A_mul_B(y, &B, x);
+  mu_assert("error, y[0] != 0.5", y[0] == 0.5);
+  mu_assert("error, y[1] != 1.9", y[1] == 1.9);
+  mu_assert("error, y[2] !=-0.7", y[2] ==-0.7);
+  mu_assert("error, y[3] != 2.4", y[3] == 2.4);
+  return 0;
+}
+
+static char * test_cbcsr_A_mul_B() {
+  struct SparseBinaryMatrix *A = read_sbm("data/sbm-100-50.data");
+  struct ColBinaryCSR B;
+  cbcsr_from_sbm(&B, A, 8);
+  double* x  = (double*)malloc(A->ncol * sizeof(double));
+  double* y  = (double*)malloc(A->nrow * sizeof(double));
+  double* y2 = (double*)malloc(A->nrow * sizeof(double));
+  for (int i = 0; i < A->ncol; i++) {
+    x[i] = sin(i*19 + 0.4) + cos(i*i*3);
+  }
+
+  A_mul_B(y2, A, x);
+  cbcsr_A_mul_B(y, &B, x);
+
+  mu_assert("error, y[0]  != 1.70095",   fabs(y[0] - 1.70095) < 1e-4);
+  mu_assert("error, y[99] != -0.174905", fabs(y[99] +0.174905) < 1e-4);
+  for (int i = 0; i < A->nrow; i++) {
+    mu_assert("error, y[i] != ytrue[i]", fabs(y[i] - y2[i]) < 1e-4);
   }
   return 0;
 }
@@ -616,6 +662,8 @@ static char * all_tests() {
     mu_run_test(test_bcsr_serialization);
     mu_run_test(test_A_mul_B_csr);
     mu_run_test(test_A_mul_Bn_csr);
+    mu_run_test(test_cbcsr);
+    mu_run_test(test_cbcsr_A_mul_B);
     return 0;
 }
 
