@@ -137,8 +137,8 @@ int main(int argc, char **argv) {
   double* Y4  = (double*)malloc(4 * A->nrow * sizeof(double));
   double* X4  = (double*)malloc(4 * A->ncol * sizeof(double));
 
-  //double* Y8  = (double*)malloc(8 * A->nrow * sizeof(double));
-  //double* X8  = (double*)malloc(8 * A->ncol * sizeof(double));
+  double* Y8  = (double*)malloc(8 * A->nrow * sizeof(double));
+  double* X8  = (double*)malloc(8 * A->ncol * sizeof(double));
 
   for (int i = 0; i < A->ncol; i++) {
     x[i]     = sin(7.0*i + 0.3);
@@ -150,9 +150,9 @@ int main(int argc, char **argv) {
     for (int k = 0; k < 4; k++) {
       X4[i*4+k] = sin(7*i + 17*k + 0.3);
     }
-    //for (int k = 0; k < 8; k++) {
-    //  X8[i*8+k] = sin(7*i + 17*k + 0.3);
-    //}
+    for (int k = 0; k < 8; k++) {
+      X8[i*8+k] = sin(7*i + 17*k + 0.3);
+    }
   }
 
   double wall_start, cpu_start;
@@ -282,6 +282,43 @@ int main(int argc, char **argv) {
     }
     timing(&wall_stop, &cpu_stop);
     printf("[cg2-csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+
+    // [cg4-csr]
+    bcsr_A_mul_B4(X4, &csrt, Y4);
+    timing(&wall_start, &cpu_start);
+    for (int i = 0; i < cgrepeats; i++) {
+      bcsr_A_mul_B4(Y4, &csr,  X4);
+      bcsr_A_mul_B4(X4, &csrt, Y4);
+    }
+    timing(&wall_stop, &cpu_stop);
+    printf("[cg4-csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+
+    // [cg8-csr]
+    timing(&wall_start, &cpu_start);
+    for (int i = 0; i < cgrepeats; i++) {
+      bcsr_A_mul_B8(Y8, &csr,  X8);
+      bcsr_A_mul_B8(X8, &csrt, Y8);
+    }
+    timing(&wall_stop, &cpu_stop);
+    printf("[cg8-csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+
+    // [cg8*-csr]
+    timing(&wall_start, &cpu_start);
+    for (int i = 0; i < cgrepeats; i++) {
+      bcsr_A_mul_Bn(Y8, &csr,  X8, 8);
+      bcsr_A_mul_Bn(X8, &csrt, Y8, 8);
+    }
+    timing(&wall_stop, &cpu_stop);
+    printf("[cg8*-csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+
+    // [cg8**-csr]
+    timing(&wall_start, &cpu_start);
+    for (int i = 0; i < cgrepeats; i++) {
+      bcsr_A_mul_B32n(Y8, &csr,  X8, 8);
+      bcsr_A_mul_B32n(X8, &csrt, Y8, 8);
+    }
+    timing(&wall_stop, &cpu_stop);
+    printf("[cg8**-csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
   }
 
   /////// Running Macau BlockCG with 2 RHSs //////
