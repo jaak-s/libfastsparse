@@ -302,6 +302,15 @@ int main(int argc, char **argv) {
     timing(&wall_stop, &cpu_stop);
     printf("[cg8-csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
 
+    // [cg8a-csr]
+    timing(&wall_start, &cpu_start);
+    for (int i = 0; i < cgrepeats; i++) {
+      bcsr_A_mul_B8_auto(Y8, &csr,  X8);
+      bcsr_A_mul_B8_auto(X8, &csrt, Y8);
+    }
+    timing(&wall_stop, &cpu_stop);
+    printf("[cg8a-csr]\tWall: %0.5e\tcpu: %0.5e\n", (wall_stop - wall_start) / cgrepeats, (cpu_stop - cpu_start)/cgrepeats);
+
     // [cg8*-csr]
     timing(&wall_start, &cpu_start);
     for (int i = 0; i < cgrepeats; i++) {

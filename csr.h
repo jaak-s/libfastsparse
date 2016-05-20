@@ -222,6 +222,37 @@ inline void bcsr_A_mul_B8(double* Y, struct BinaryCSR *A, double* X) {
   }
 }
 
+inline void bcsr_A_mul_B8_auto(double* Y, struct BinaryCSR *A, double* X) {
+  int* row_ptr = A->row_ptr;
+  int* cols    = A->cols;
+
+#pragma omp parallel for schedule(dynamic, 512)
+  for(int row = 0; row < A->nrow; row++) {
+    double tmp0=0, tmp1=0, tmp2=0, tmp3=0, 
+           tmp4=0, tmp5=0, tmp6=0, tmp7=0;
+    for (int i = row_ptr[row]; i < row_ptr[row + 1]; i++) {
+      int col = cols[i] * 8;
+      tmp0 += X[col];
+      tmp1 += X[col+1];
+      tmp2 += X[col+2];
+      tmp3 += X[col+3];
+      tmp4 += X[col+4];
+      tmp5 += X[col+5];
+      tmp6 += X[col+6];
+      tmp7 += X[col+7];
+    }
+    int r = row * 8;
+    Y[r] = tmp0;
+    Y[r+1] = tmp1;
+    Y[r+2] = tmp2;
+    Y[r+3] = tmp3;
+    Y[r+4] = tmp4;
+    Y[r+5] = tmp5;
+    Y[r+6] = tmp6;
+    Y[r+7] = tmp7;
+  }
+}
+
 /** Y = A * X, where Y and X have <ncol> columns and are row-ordered */
 inline void bcsr_A_mul_Bn(double* Y, struct BinaryCSR *A, double* X, const int ncol) {
   int* row_ptr = A->row_ptr;

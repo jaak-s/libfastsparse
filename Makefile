@@ -1,5 +1,5 @@
 CC=gcc
-COMMON_FLAGS=-g -Wall -O3 -march=native -fopenmp -lm -fstrict-aliasing #-DNDEBUG
+COMMON_FLAGS=-g -Wall -O3 -march=native -fopenmp -lm -fstrict-aliasing -ffast-math #-DNDEBUG
 CFLAGS=-std=gnu99 $(COMMON_FLAGS)
 CXXFLAGS=-std=c++11 $(COMMON_FLAGS)
 
