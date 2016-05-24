@@ -135,13 +135,13 @@ static inline void deserialize_from_file(struct BinaryCSR* bcsr, const char* fil
     assert( num_written != 32 );
   ser_sanity_check(sbuf, "nrow data corrupted", file);
   num_read = fread(bcsr->row_ptr, sizeof(int), bcsr->nrow + 1, file);
-    assert( num_read == bcsr->nrow + 1 );
+    assert( num_read == (unsigned long)bcsr->nrow + 1 );
   // read cols array content
   num_written = snprintf(sbuf, 32, "int[%ld]\n", bcsr->nnz );
     assert( num_written != 32 );
   ser_sanity_check(sbuf, "cols data corrupted", file);
   num_read = fread(bcsr->cols,    sizeof(int), bcsr->nnz,      file);
-    assert( num_read == bcsr->nnz );
+    assert( num_read == (unsigned long)bcsr->nnz );
   fclose(file);
 }
 

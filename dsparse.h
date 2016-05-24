@@ -68,9 +68,9 @@ struct SparseDoubleMatrix* read_sdm(const char *filename) {
     fprintf( stderr, "File error: %s\n", filename );
     exit(1);
   }
-  long nrow = read_long(fh);
-  long ncol = read_long(fh);
-  long nnz  = read_long(fh);
+  unsigned long nrow = read_long(fh);
+  unsigned long ncol = read_long(fh);
+  unsigned long nnz  = read_long(fh);
   // reading data
   int* rows = (int*)malloc(nnz * sizeof(int));
   int* cols = (int*)malloc(nnz * sizeof(int));
