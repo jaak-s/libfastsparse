@@ -32,7 +32,7 @@ static inline void new_cbcsr(
   A->row_ptr = (int*)malloc( (A->nblocks * A->nrow + 1) * sizeof(int));
 
   //compute number of non-zero entries per row of A
-  for (int row = 0; row < nrow; row++) {
+  for (int row = 0; row < A->nrow * A->nblocks + 1; row++) {
     A->row_ptr[row] = 0;
   }
 
