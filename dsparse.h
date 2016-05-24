@@ -84,7 +84,7 @@ struct SparseDoubleMatrix* read_sdm(const char *filename) {
   }
   fclose(fh);
   // convert data from 1 based to 0 based
-  for (long i = 0; i < nnz; i++) {
+  for (unsigned long i = 0; i < nnz; i++) {
     rows[i]--;
     cols[i]--;
   }
