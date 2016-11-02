@@ -3,11 +3,11 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include <omp.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
 
+#include "omp_util.h"
 #include "sparse.h"
 #include "quickSort.h"
 
@@ -318,6 +318,7 @@ inline void bcsr_AA_mul_B(double* y, struct BinaryCSR *A, double* x) {
   }
 }
 
+
 /** y = A'A * x in parallel */
 inline void parallel_bcsr_AA_mul_B(double* y, struct BinaryCSR *A, double* x, double* ytmp) {
   int* row_ptr = A->row_ptr;
@@ -326,11 +327,9 @@ inline void parallel_bcsr_AA_mul_B(double* y, struct BinaryCSR *A, double* x, do
   const int ncol    = A->ncol;
 #pragma omp parallel
   {
-    const int nthreads = omp_get_num_threads();
-    const int ithread  = omp_get_thread_num();
-    const int ytmp_size = ncol * nthreads;
+    const int ytmp_size = ncol * nthreads();
 
-    double* ytmpi = & ytmp[ncol * ithread];
+    double* ytmpi = & ytmp[ncol * thread_num()];
     memset(ytmpi, 0, ncol * sizeof(double));
 
 #pragma omp for schedule(dynamic, 1024)
