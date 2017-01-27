@@ -41,19 +41,17 @@ long check_if_sorted(struct SparseBinaryMatrix *A) {
 }
 
 void randn(double* x, int n) {
-  struct drand48_data drand_buf;
-  int seed;
-#pragma omp parallel private(seed, drand_buf)
+  short unsigned int seed[3];
+#pragma omp parallel private(seed)
   {
-    seed = 1202107158 + omp_get_thread_num() * 1999;
-    srand48_r (seed, &drand_buf);
+    *(int *)(seed) = 1202107158 + omp_get_thread_num() * 1999;
 
 #pragma omp for schedule(static)
     for (int i = 0; i < n; i += 2) {
       double x1, x2, w;
       do {
-        drand48_r(&drand_buf, &x1);
-        drand48_r(&drand_buf, &x2);
+        x1 = erand48(seed);
+        x2 = erand48(seed);
         x1 = 2.0 * x1 - 1.0;
         x2 = 2.0 * x2 - 1.0;
         w = x1 * x1 + x2 * x2;
