@@ -9,7 +9,7 @@ void quickSortD(long[], long, long, double[]);
 long partitionD(long[], long, long, double[]);
 void insertionSortD(long[], long, long, double[]);
 
-void quickSortD(long a[], long l, long r, double v[]) {
+inline void quickSortD(long a[], long l, long r, double v[]) {
   if (r - l < 10) {
     insertionSortD(a, l, r, v);
     return;
@@ -26,7 +26,7 @@ void quickSortD(long a[], long l, long r, double v[]) {
 }
 
 
-long partitionD(long a[], long l, long r, double v[]) {
+inline long partitionD(long a[], long l, long r, double v[]) {
   long pivot, i, j, t;
   double td;
   t = (l+r) / 2;
@@ -55,7 +55,7 @@ long partitionD(long a[], long l, long r, double v[]) {
   return j;
 }
 
-void insertionSortD(long list[], long start, long end, double v[]) {
+inline void insertionSortD(long list[], long start, long end, double v[]) {
   for (long x = start + 1; x <= end; x++) {
     long val = list[x];
     double td = v[x];
