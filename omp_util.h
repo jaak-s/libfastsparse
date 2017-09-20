@@ -2,15 +2,14 @@
 #define OMP_UTIL_H
 
 #if defined(_OPENMP)
-#include <iostream>
+#include <stdio.h>
 #include <omp.h>
 #include <cblas.h>
 
 inline int nthreads() { return omp_get_num_threads(); }
 inline int thread_limit() 
 {
-    static int nt = -1;
-    if (nt < 0) 
+    int nt = -1;
 #pragma omp parallel
     {
 #pragma omp single
@@ -22,9 +21,9 @@ inline int thread_limit()
 inline int thread_num() { return omp_get_thread_num(); }
 
 inline void threads_init() {
-    std::cout << "Using OpenMP with up to " << thread_limit() << " threads.\n";
+    printf("Using OpenMP with up to %d threads.\n", thread_limit());
 #ifdef OPENBLAS
-    std::cout << "Using BLAS with up to " << openblas_get_num_threads() << " threads.\n";
+    printf("Using OpenBLAS with up to %d threads.\n", openblas_get_num_threads());
 #endif
 }
 #else
