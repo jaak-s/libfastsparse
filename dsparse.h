@@ -19,7 +19,7 @@ struct SparseDoubleMatrix
 };
 
 /** constructor, computes nrow and ncol from data */
-struct SparseDoubleMatrix* new_sdm(long nrow, long ncol, long nnz, int* rows, int* cols, double* vals) {
+inline struct SparseDoubleMatrix* new_sdm(long nrow, long ncol, long nnz, int* rows, int* cols, double* vals) {
   struct SparseDoubleMatrix *A = (struct SparseDoubleMatrix*)malloc(sizeof(struct SparseDoubleMatrix));
   A->nnz  = nnz;
   A->rows = rows;
@@ -61,7 +61,7 @@ inline void sdm_At_mul_B(double* y, struct SparseDoubleMatrix *A, double* x) {
   }
 }
 
-struct SparseDoubleMatrix* read_sdm(const char *filename) {
+inline struct SparseDoubleMatrix* read_sdm(const char *filename) {
   FILE* fh = fopen( filename, "r" );
   size_t result1, result2, result3;
   if (fh == NULL) {
@@ -129,7 +129,7 @@ struct BlockedSDM {
 };
 
 /** constructor for blocked rows */
-struct BlockedSDM* new_bsdm(struct SparseDoubleMatrix* A, int block_size) {
+inline struct BlockedSDM* new_bsdm(struct SparseDoubleMatrix* A, int block_size) {
   struct BlockedSDM *B = (struct BlockedSDM*)malloc(sizeof(struct BlockedSDM));
   B->nrow = A->nrow;
   B->ncol = A->ncol;

@@ -400,9 +400,9 @@ struct SparseDoubleMatrix* make_sdm() {
   int *rows = (int*)malloc(A->nnz * sizeof(int));
   int *cols = (int*)malloc(A->nnz * sizeof(int));
   double *vals = (double*)malloc(A->nnz * sizeof(double));
-  memcpy(rows, (int []){1, 1, 3, 4, 1, 4, 5, 0, 1, 2, 4}, A->nnz * sizeof(int));
-  memcpy(cols, (int []){0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3}, A->nnz * sizeof(int));
-  memcpy(vals, (double []){0.65, 0.84, 0.54, 0.59, 0.51, 0.27, 0.23, 0.94, 0.66, 0.31, 0.92}, A->nnz * sizeof(double));
+  memcpy(rows, ((int []){1, 1, 3, 4, 1, 4, 5, 0, 1, 2, 4}), A->nnz * sizeof(int));
+  memcpy(cols, ((int []){0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 3}), A->nnz * sizeof(int));
+  memcpy(vals, ((double []){0.65, 0.84, 0.54, 0.59, 0.51, 0.27, 0.23, 0.94, 0.66, 0.31, 0.92}), A->nnz * sizeof(double));
   A->rows = rows;
   A->cols = cols;
   A->vals = vals;
